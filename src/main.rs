@@ -14,6 +14,7 @@ fn main() {
 #[component]
 fn App() -> Element {
     static CSS: Asset = manganis::asset!("/assets/uiuapp.css");
+    static UIUA386: Asset = manganis::asset!("/assets/Uiua386.ttf");
 
     rsx! {
         head {
@@ -24,6 +25,7 @@ fn App() -> Element {
             }
             title { "uiuapp" }
             link { href: "{CSS}", rel: "stylesheet" }
+            // TODO: add font here
 
         }
         body {

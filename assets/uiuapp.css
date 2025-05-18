@@ -1,7 +1,8 @@
 .wrapper {
     position: relative; /* For the settings button, since it's absolute */
-    max-inline-size: 270px;
-    margin-inline: auto; /* Center on screen */
+    /*max-inline-size: 270px;*/
+    /*margin-inline: auto; /* Center on screen */
+    /*width: 100%;*/
     border: solid;
 
     display: grid;
@@ -11,6 +12,7 @@ img {
     display: block;
     max-inline-size: 100%;
 }
+
 
 @font-face {
     font-family: Uiua386;
@@ -26,6 +28,7 @@ button {
     background-color: #45475a;
     color: #cdd6f4;
     border: none;
+    padding: 5px;
 }
 button:hover {
     background-color: #313244;
