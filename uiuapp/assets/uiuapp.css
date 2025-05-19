@@ -1,3 +1,6 @@
+body {
+    margin: 0px;
+}
 .wrapper {
     position: relative; /* For the settings button, since it's absolute */
     /*max-inline-size: 270px;*/
