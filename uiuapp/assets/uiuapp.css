@@ -13,6 +13,7 @@ body {
     height: 100vh;
     margin: 0px;
     padding: 0px;
+    max-height: 100vh;
 }
 
 img {
@@ -46,7 +47,7 @@ button:hover {
     justify-content: flex-end;
     background-color: #1e1e2e;
     color: #cdd6f4;
-    height: 100vh;
+    flex-grow: auto;
     /*border: 2px solid;*/
 }
 
@@ -56,7 +57,7 @@ button:hover {
 }
 
 .code-scrollbackbuffer {
-    overflow-y: auto;
+    overflow-y: scroll;
     width: 100%;
 }
 
@@ -78,6 +79,10 @@ button:hover {
     border: none;
     margin-top: auto;
     margin-bottom: auto;
+    margin-left: 3px;
+    margin-right: 3px;
+    caret-color: #89dceb;
+    color: #cdd6f4;
 }
 
 .input-zone {
@@ -103,6 +108,7 @@ button:hover {
 .uiua-char-input {
   aspect-ratio: 1 / 1;
   font-size: 1rem;
+  font-weight: bold;
 }
 
 .user-input {
@@ -114,9 +120,7 @@ button:hover {
 
 .run-button {
 }
-
-
-
+/* uiuauiuiauiauiuaiua */
 
 .monadic-modifier {
     color: #f0c36f;
@@ -141,4 +145,10 @@ button:hover {
 }
 .string-literal {
     color: #20f9fc;
+}
+.uiua-trans {
+    background-image: linear-gradient(180deg, #5BCEFA 34%, #F5A9B8 34%, #F5A9B8 45%, #FFFFFF 45%, #FFFFFF 56%, #F5A9B8 56%, #F5A9B8 67%, #5BCEFA 67%);
+    background-size: 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }

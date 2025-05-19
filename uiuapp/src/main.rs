@@ -76,26 +76,30 @@ fn App() -> Element {
                           button { "Bksp" }
                     }
                     div { class: "input-grid-buttons",
-                          button { class: "uiua-char-input dyadic-function", "+" }
-                          button { class: "uiua-char-input monadic-function", "⁅" }
-                          button { class: "uiua-char-input dyadic-function", ">" }
-                          button { class: "uiua-char-input monadic-function", "△" }
+                          button { class: "uiua-char-input", span { class: "dyadic-function",  "+" } }
+                          button { class: "uiua-char-input", span { class: "monadic-function", "⁅" } }
+                          button { class: "uiua-char-input", span { class: "dyadic-function",  ">" } }
+                          button { class: "uiua-char-input", span { class: "monadic-function", "△" } }
                           button { class: "uiua-char-input", "🧪" }
-                          button { class: "uiua-char-input monadic-function", "⍉" }
-                          button { class: "uiua-char-input monadic-function", "⍆" }
-                          button { class: "uiua-char-input monadic-function", "⊚" }
-                          button { class: "uiua-char-input dyadic-modifier", "⍜" }
-                          button { class: "uiua-char-input dyadic-modifier", "⍣" }
-                          button { class: "uiua-char-input dyadic-modifier", "⊃" }
-                          button { class: "uiua-char-input dyadic-function", "⊡" }
-                          button { class: "uiua-char-input constant-value", "τ" }
-                          button { class: "uiua-char-input stack-function", "[" }
-                          button { class: "uiua-char-input string-literal", "@" }
-                          button { class: "uiua-char-input dyadic-function", "⊗" }
-                          button { class: "uiua-char-input monadic-modifier", "⊸" }
-                          button { class: "uiua-char-input stack-function", "←" }
-                          button { class: "uiua-char-input constant-value", "0" }
-                          button { class: "uiua-char-input stack-function", "∘" }
+                          button { class: "uiua-char-input", span { class: "uiua-trans", "⍉" } }
+                          button { class: "uiua-char-input", span { class: "monadic-function", "⍆" } }
+                          button { class: "uiua-char-input", span { class: "monadic-function", "⊚" } }
+                          button { class: "uiua-char-input", span { class: "dyadic-modifier",  "⍜" } }
+                          button { class: "uiua-char-input", span { class: "dyadic-modifier",  "⍣" } }
+                          button { class: "uiua-char-input", span { class: "dyadic-modifier",  "⊃" } }
+                          button { class: "uiua-char-input", span { class: "stack-function",   "∘" } }
+                          button { class: "uiua-char-input", span { class: "constant-value",   "τ" } }
+                          button { class: "uiua-char-input", span { class: "stack-function",   "[" } }
+                          button { class: "uiua-char-input", span { class: "string-literal",   "@" } }
+                          button { class: "uiua-char-input", span { class: "dyadic-function",  "⊗" } }
+                          button { class: "uiua-char-input", span { class: "monadic-modifier", "⊸" } }
+                          button { class: "uiua-char-input", span { class: "stack-function",   "←" } }
+                          button { class: "uiua-char-input", span { class: "constant-value",   "0" } }
+                          button { class: "uiua-char-input",
+                                   span { class:  "dyadic-function", "-" }
+                                   span { class:  "monadic-modifier", "⊸" }
+                                   span { class:  "monadic-function", "¬" }
+                          }
                     }
               }
         }
