@@ -22,7 +22,7 @@ fn App() -> Element {
             content: "width=device-width, initial-scale=1.0",
             name: "viewport",
         }
-        Title { "uiuapp" }
+        Title { "cas/uiuapp" }
         Stylesheet { href: CSS }
 
         div { class: "wrapper",
@@ -80,7 +80,7 @@ fn App() -> Element {
                           button { class: "uiua-char-input monadic-function", "⁅" }
                           button { class: "uiua-char-input dyadic-function", ">" }
                           button { class: "uiua-char-input monadic-function", "△" }
-                          button { class: "uiua-char-input", "Expr" }
+                          button { class: "uiua-char-input", "🧪" }
                           button { class: "uiua-char-input monadic-function", "⍉" }
                           button { class: "uiua-char-input monadic-function", "⍆" }
                           button { class: "uiua-char-input monadic-function", "⊚" }

@@ -1,14 +1,16 @@
 body {
     margin: 0px;
+    padding: 0px;
 }
 .wrapper {
-    position: relative; /* For the settings button, since it's absolute */
     /*max-inline-size: 270px;*/
     /*margin-inline: auto; /* Center on screen */
     /*width: 100%;*/
-    border: solid;
 
     display: grid;
+    height: 100vh;
+    margin: 0px;
+    padding: 0px;
 }
 
 img {
@@ -38,6 +40,9 @@ button:hover {
 }
 
 .code-zone {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     background-color: #1e1e2e;
     color: #cdd6f4;
     /*border: 2px solid;*/
@@ -49,7 +54,6 @@ button:hover {
 }
 
 .code-scrollbackbuffer {
-    height: 200px;
     overflow-y: auto;
     width: 100%;
 }
