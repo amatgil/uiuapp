@@ -7,7 +7,9 @@ body {
     /*margin-inline: auto; /* Center on screen */
     /*width: 100%;*/
 
-    display: grid;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     height: 100vh;
     margin: 0px;
     padding: 0px;
@@ -15,7 +17,6 @@ body {
 
 img {
     display: block;
-    max-inline-size: 100%;
 }
 
 
@@ -45,6 +46,7 @@ button:hover {
     justify-content: flex-end;
     background-color: #1e1e2e;
     color: #cdd6f4;
+    height: 100vh;
     /*border: 2px solid;*/
 }
 
