@@ -1,0 +1,132 @@
+.wrapper {
+    position: relative; /* For the settings button, since it's absolute */
+    max-inline-size: 270px;
+    margin-inline: auto; /* Center on screen */
+    border: solid;
+
+    display: grid;
+}
+
+img {
+    display: block;
+    max-inline-size: 100%;
+}
+
+@font-face {
+    font-family: Uiua386;
+    src: url("Uiua386.ttf");
+}
+
+
+* {
+    font-family: Uiua386;
+}
+
+button {
+    background-color: #45475a;
+    color: #cdd6f4;
+    border: none;
+}
+button:hover {
+    background-color: #313244;
+}
+
+.code-zone {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    /*border: 2px solid;*/
+}
+
+.code-display-zone {
+    display: flex;
+    justify-content: space-between;
+}
+
+.code-scrollbackbuffer {
+    height: 200px;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.code-buttons {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+}
+
+.code-textarea-zone {
+    display: flex;
+    /*background-color: #585b70; <- invisible rn */ 
+    border: 1px solid #cba6f7;
+}
+
+.uiua-input {
+    width: 100%;
+    background-color: #2d3c4a; /*#7f849c;*/
+    border: none;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.input-zone {
+    background-color: #45475a;
+    /*border: 2px solid;*/
+}
+
+.special-buttons {
+    border-top: solid;
+    border-bottom: solid;
+    border-color: #181825;
+    display: flex;
+    justify-content: space-evenly; /* flex-end;*/
+    gap: 0.3rem;
+}
+
+.input-grid-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
+}
+
+.uiua-char-input {
+  aspect-ratio: 1 / 1;
+  font-size: 1rem;
+}
+
+.user-input {
+    margin-left: 2rem;
+}
+.user-result {
+    margin-left: 0.5rem;
+}
+
+.run-button {
+}
+
+
+
+
+.monadic-modifier {
+    color: #f0c36f;
+}
+.dyadic-modifier {
+    color: #cc6be9;
+}
+.noadic-function {
+    color: #ed5e6a;
+}
+.monadic-function {
+    color: #95d16a;
+}
+.dyadic-function {
+    color: #54b0fc;
+}
+.stack-function {
+    color: #d1daec;
+}
+.constant-value {
+    color: #f08050
+}
+.string-literal {
+    color: #20f9fc;
+}
