@@ -113,9 +113,11 @@ button:hover {
 
 .user-input {
     margin-left: 2rem;
+    white-space: pre-wrap;
 }
 .user-result {
     margin-left: 0.5rem;
+    white-space: pre-wrap;
 }
 
 .run-button {

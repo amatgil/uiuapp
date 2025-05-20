@@ -17,17 +17,20 @@ fn App() -> Element {
     static UIUA386: Asset = asset!("/assets/Uiua386.ttf");
 
     // the text that's been input and evaluated
-    let buffer_contents = use_signal(|| vec!["+ 1 1".to_string(), "2".to_string()]);
-
-    // Inputted but not yet evaluated
-    let mut input_contents = use_signal(|| String::new());
-
-    use_effect(move || {
-        // When we read count, it becomes a dependency of the effect
-        let current_count = input_contents();
-        // Whenever count changes, the effect will rerun
-        info!("{current_count}");
+    let buffer_contents = use_signal(|| {
+        vec![
+            "+ 1 1".to_string(),
+            "2".to_string(),
+            "˙⊞=⇡3".to_string(),
+            "1 0 0\n0 1 0\n0 0 1".to_string(),
+            "˙⊞=⇡3".to_string(),
+            "1 0 0\n0 1 0\n0 0 1".to_string(),
+            "˙⊞=⇡3".to_string(),
+            "1 0 0\n0 1 0\n0 0 1".to_string(),
+        ]
     });
+    // Has been input but not yet evaluated
+    let mut input_contents = use_signal(|| String::new());
 
     rsx! {
         Meta { charset: "UTF-8" }
@@ -42,31 +45,12 @@ fn App() -> Element {
               div { class: "code-zone",
                     div { class: "code-display-zone",
                           div { class: "code-scrollbackbuffer",
-                                p { class: "user-input", "+ 1 1" }
-                                p { class: "user-result", "2" }
-                                p { class: "user-input", "˙⊞=⇡3" }
-                                p { class: "user-result",
-                                    "1 0 0"
-                                    br {}
-                                    "0 1 0"
-                                    br {}
-                                    "0 0 1"
-                                }
-                                p { class: "user-input", "˙⊞=⇡3" }
-                                p { class: "user-result",
-                                    "1 0 0"
-                                    br {}
-                                    "0 1 0"
-                                    br {}
-                                    "0 0 1"
-                                }
-                                p { class: "user-input", "˙⊞=⇡3" }
-                                p { class: "user-result",
-                                    "1 0 0"
-                                    br {}
-                                    "0 1 0"
-                                    br {}
-                                    "0 0 1"
+                                for (i, text) in buffer_contents.read().iter().enumerate() {
+                                    if i % 2 == 0 {
+                                        p { class: "user-input", "{text}" }
+                                    } else {
+                                        p { class: "user-result", "{text}" }
+                                    }
                                 }
                           }
                           div { class: "code-buttons",
