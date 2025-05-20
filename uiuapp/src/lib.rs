@@ -1,5 +1,6 @@
 use uiua::Primitive;
 
+#[derive(Debug, Clone, Copy)]
 pub enum Either<L, R> {
     Left(L),
     Right(R),

@@ -2568,6 +2568,7 @@ dependencies = [
  "dioxus",
  "dioxus-logger 0.5.1",
  "getrandom",
+ "lazy_static",
  "uiua",
  "web-sys",
 ]

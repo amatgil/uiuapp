@@ -5,14 +5,44 @@ use dioxus::prelude::*;
 use dioxus_logger::tracing::{info, Level};
 use uiuapp::*;
 
+use lazy_static::lazy_static;
 use uiua::Primitive as P;
 use uiuapp::Either as E;
+
+const UNKNOWN_GLYPH: char = '¡';
 
 fn main() {
     // Init logger
     dioxus_logger::init(Level::INFO).expect("failed to init logger");
     info!("starting app");
     launch(App);
+}
+
+type ButtonIcon = E<Vec<P>, (&'static str, &'static str)>;
+lazy_static! {
+    /// The car of each line is the default icon. when pressed, the cdr is the radial menu icons
+    static ref button_icons: [Vec<ButtonIcon>; 5 * 4] = [
+        vec![E::Left(vec![P::Add])],
+        vec![E::Left(vec![P::Round])],
+        vec![E::Left(vec![P::Gt])],
+        vec![E::Left(vec![P::Shape])],
+        vec![E::Right(("🧪", ""))],
+        vec![E::Left(vec![P::Transpose])],
+        vec![E::Left(vec![P::Sort])],
+        vec![E::Left(vec![P::Where])],
+        vec![E::Left(vec![P::Under])],
+        vec![E::Left(vec![P::Try])],
+        vec![E::Left(vec![P::Fork])],
+        vec![E::Left(vec![P::Identity])],
+        vec![E::Left(vec![P::Tau])],
+        vec![E::Right(("[", "stack-function"))],
+        vec![E::Right(("@", "string-literal"))],
+        vec![E::Left(vec![P::IndexOf])],
+        vec![E::Left(vec![P::By])],
+        vec![E::Left(vec![P::Fold])],
+        vec![E::Right(("0", "constant-value"))],
+        vec![E::Left(vec![P::Sub, P::By, P::Neg])],
+    ];
 }
 
 #[component]
@@ -78,7 +108,7 @@ fn App() -> Element {
                           button { "Bksp" }
                     }
                     div { class: "input-grid-buttons",
-                          ButtonIcons {}
+                           ButtonIcons { input_contents }
                     }
               }
         }
@@ -86,38 +116,20 @@ fn App() -> Element {
 }
 
 #[component]
-fn ButtonIcons() -> Element {
-    let button_icons: [E<Vec<P>, (&'static str, &'static str)>; 20] = [
-        E::Left(vec![P::Add]),
-        E::Left(vec![P::Round]),
-        E::Left(vec![P::Gt]),
-        E::Left(vec![P::Shape]),
-        E::Right(("🧪", "")),
-        E::Left(vec![P::Transpose]),
-        E::Left(vec![P::Sort]),
-        E::Left(vec![P::Where]),
-        E::Left(vec![P::Under]),
-        E::Left(vec![P::Try]),
-        E::Left(vec![P::Fork]),
-        E::Left(vec![P::Identity]),
-        E::Left(vec![P::Tau]),
-        E::Right(("[", "stack-function")),
-        E::Right(("@", "string-literal")),
-        E::Left(vec![P::IndexOf]),
-        E::Left(vec![P::By]),
-        E::Left(vec![P::Fold]),
-        E::Right(("0", "constant-value")),
-        E::Left(vec![P::Sub, P::By, P::Neg]),
-    ];
-
+fn ButtonIcons(input_contents: Signal<String>) -> Element {
     rsx! {
-        for button in button_icons {
-            match button {
-                E::Left(prims) => {
+        for button in button_icons.clone() {
+            match button[0] {
+                E::Left(ref prims) => {
+                    let primes = prims.clone();
                     rsx! {
                         button { class: "uiua-char-input",
+                                 onclick: move |evt| {
+                                     evt.prevent_default();
+                                     input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                 },
                             for p in prims {
-                                span { class: css_of_prim(&p), "{p.glyph().map(|t|t.to_string()).unwrap_or(p.name().to_string())}" }
+                                span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                             }
                         }
                     }
