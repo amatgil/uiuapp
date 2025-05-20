@@ -16,6 +16,19 @@ fn App() -> Element {
     static CSS: Asset = asset!("/assets/uiuapp.css");
     static UIUA386: Asset = asset!("/assets/Uiua386.ttf");
 
+    // the text that's been input and evaluated
+    let buffer_contents = use_signal(|| vec!["+ 1 1".to_string(), "2".to_string()]);
+
+    // Inputted but not yet evaluated
+    let mut input_contents = use_signal(|| String::new());
+
+    use_effect(move || {
+        // When we read count, it becomes a dependency of the effect
+        let current_count = input_contents();
+        // Whenever count changes, the effect will rerun
+        info!("{current_count}");
+    });
+
     rsx! {
         Meta { charset: "UTF-8" }
         Meta {
@@ -61,8 +74,8 @@ fn App() -> Element {
                           }
                     }
                     div { class: "code-textarea-zone",
-                          input { class: "uiua-input" }
-                          button { class: "run-button", "Run" }
+                          input { class: "uiua-input", value: input_contents }
+                          button { class: "run-button", "Run" },
                     }
               }
               div { class: "input-zone",
@@ -76,7 +89,14 @@ fn App() -> Element {
                           button { "Bksp" }
                     }
                     div { class: "input-grid-buttons",
-                          button { class: "uiua-char-input", span { class: "dyadic-function",  "+" } }
+                          button { class: "uiua-char-input",
+                                   onclick: move |evt| {
+                                       evt.prevent_default();
+                                       //*input_contents.write() = "aaaaaaaa".to_string();
+                                       input_contents.write().push_str("+");
+                                   },
+                                   span { class: "dyadic-function",  "+" },
+                          }
                           button { class: "uiua-char-input", span { class: "monadic-function", "⁅" } }
                           button { class: "uiua-char-input", span { class: "dyadic-function",  ">" } }
                           button { class: "uiua-char-input", span { class: "monadic-function", "△" } }
@@ -95,7 +115,7 @@ fn App() -> Element {
                           button { class: "uiua-char-input", span { class: "monadic-modifier", "⊸" } }
                           button { class: "uiua-char-input", span { class: "stack-function",   "←" } }
                           button { class: "uiua-char-input", span { class: "constant-value",   "0" } }
-                          button { class: "uiua-char-input",
+                          button { class: "uiua-char-input", // Wrench go brrr
                                    span { class:  "dyadic-function", "-" }
                                    span { class:  "monadic-modifier", "⊸" }
                                    span { class:  "monadic-function", "¬" }

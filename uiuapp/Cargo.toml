@@ -12,6 +12,37 @@ dioxus = { version = "0.6", features = ["web"] }
 
 # Debug
 dioxus-logger = "0.5.1"
+uiua = { version = "0.16.0", default-features = false, features = ["batteries", "web"] }
+getrandom = { version = "0.2", features = ["js"] } # uiua complains otherwise
+web-sys = { version = "0.3.77", features = [
+  "CssStyleDeclaration",
+  "DomRect",
+  "Storage",
+  "HtmlAudioElement",
+  "HtmlBrElement",
+  "HtmlElement",
+  "Selection",
+  "Node",
+  "Clipboard",
+  "ClipboardEvent",
+  "DataTransfer",
+  "Navigator",
+  "Permissions",
+  "ScrollIntoViewOptions",
+  "ScrollBehavior",
+  "ScrollLogicalPosition",
+  "StorageManager",
+  "FileReader",
+  "EventInit",
+  "DataTransfer",
+  "File",
+  "FileList",
+  "ResizeObserver",
+  "ResizeObserverEntry",
+  "Performance",
+]}
+
+
 
 [profile]
 

@@ -13,7 +13,6 @@ body {
     height: 100vh;
     margin: 0px;
     padding: 0px;
-    max-height: 100vh;
 }
 
 img {
@@ -48,6 +47,7 @@ button:hover {
     background-color: #1e1e2e;
     color: #cdd6f4;
     flex-grow: auto;
+    height: 100%;
     /*border: 2px solid;*/
 }
 
