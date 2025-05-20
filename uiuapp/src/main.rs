@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::document::*;
+use dioxus::prelude::Key::Character;
 use dioxus::prelude::*;
 use dioxus_logger::tracing::{info, Level};
 use uiuapp::*;
@@ -10,6 +11,7 @@ use uiua::Primitive as P;
 use uiuapp::Either as E;
 
 const UNKNOWN_GLYPH: char = '¡';
+const EXPERIMENTAL_ICON: &str = "🧪";
 
 fn main() {
     // Init logger
@@ -26,7 +28,7 @@ lazy_static! {
         vec![E::Left(vec![P::Round])],
         vec![E::Left(vec![P::Gt])],
         vec![E::Left(vec![P::Shape])],
-        vec![E::Right(("🧪", ""))],
+        vec![E::Right((EXPERIMENTAL_ICON, ""))],
         vec![E::Left(vec![P::Transpose])],
         vec![E::Left(vec![P::Sort])],
         vec![E::Left(vec![P::Where])],
@@ -93,14 +95,21 @@ fn App() -> Element {
                           }
                     }
                     div { class: "code-textarea-zone",
-                          textarea { class: "uiua-input", rows: 2, value: input_contents }
+                          textarea { class: "uiua-input", rows: 2,
+                                     onkeypress: move |e| {
+                                         e.prevent_default();
+                                         if let Character(s) = e.key() {
+                                         input_contents.write().push_str(&s);
+                                         }
+                                     },
+                                     value: input_contents }
                           button { class: "run-button", "Run" },
                     }
               }
               div { class: "input-zone",
                     div { class: "special-buttons",
                           button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
-                          button { ";" }
+                          button { onclick: move |_| {input_contents.write().push(';');}, ";" }
                           button { "←" }
                           button { "↓" }
                           button { "↑" }
@@ -137,7 +146,15 @@ fn ButtonIcons(input_contents: Signal<String>) -> Element {
 
                 E::Right((s, c)) => {
                     rsx! {
-                        button { class: "{c}", "{s}" }
+                        button {
+                            onclick: move |e| {
+                                e.prevent_default();
+                                if s != EXPERIMENTAL_ICON {
+                                    input_contents.write().push_str(s);
+                                }
+                            },
+                            class: "{c}", "{s}"
+                        }
                     }
                 }
             }
