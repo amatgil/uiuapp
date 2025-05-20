@@ -110,14 +110,6 @@ fn ButtonIcons() -> Element {
         E::Left(vec![P::Sub, P::By, P::Neg]),
     ];
 
-    // button { class: "uiua-char-input", span { class: "monadic-function", "⊚" } }
-
-    // button { class: "uiua-char-input", // Wrench go brrr
-    //          span { class:  "dyadic-function", "-" }
-    //          span { class:  "monadic-modifier", "⊸" }
-    //          span { class:  "monadic-function", "¬" }
-    // }
-
     rsx! {
         for button in button_icons {
             match button {
