@@ -93,19 +93,19 @@ fn App() -> Element {
                           }
                     }
                     div { class: "code-textarea-zone",
-                          input { class: "uiua-input", value: input_contents }
+                          textarea { class: "uiua-input", rows: 2, value: input_contents }
                           button { class: "run-button", "Run" },
                     }
               }
               div { class: "input-zone",
                     div { class: "special-buttons",
-                          button { "Return" }
+                          button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
                           button { ";" }
                           button { "←" }
                           button { "↓" }
                           button { "↑" }
                           button { "→" }
-                          button { "Bksp" }
+                          button { onclick: move |_| {input_contents.write().pop();}, "Bksp" }
                     }
                     div { class: "input-grid-buttons",
                            ButtonIcons { input_contents }
