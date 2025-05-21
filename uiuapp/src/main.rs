@@ -22,11 +22,31 @@ fn main() {
 
 lazy_static! {
     /// The car of each line is the default icon. when pressed, the cdr is the radial menu icons
+    // TODO: pick out better groupings
     static ref button_icons: [Vec<ButtonIcon>; 5 * 4] = [
-        vec![E::Left(vec![P::Add]), 
+        vec![E::Left(vec![P::Add]),
              E::Left(vec![P::Sub]),
              E::Left(vec![P::Mul]),
-             E::Left(vec![P::Div])
+             E::Left(vec![P::Div]),
+             E::Left(vec![P::Round]),
+             E::Left(vec![P::Floor]),
+             E::Left(vec![P::Ceil]), // Ceils because testing
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
+             E::Left(vec![P::Ceil]),
         ],
         vec![E::Left(vec![P::Round])],
         vec![E::Left(vec![P::Gt])],
@@ -76,7 +96,7 @@ fn App() -> Element {
 
     let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| {
         Some(RadialInfo {
-            last_pos: (600, 200),
+            last_pos: (300, 200),
             glyphs: button_icons[0].clone(),
         })
     });
@@ -122,7 +142,7 @@ fn App() -> Element {
                     div { class: "special-buttons",
                           button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
                           button { onclick: move |_| {input_contents.write().push(';');}, ";" }
-                          button { "←" }
+                          button { "←" } // TODO: position cursor
                           button { "↓" }
                           button { "↑" }
                           button { "→" }
@@ -138,49 +158,52 @@ fn App() -> Element {
 }
 
 #[component]
-fn RadialSelector(input_contents: Signal<String>, radial_pos: Signal<Option<RadialInfo>>) -> Element {
+fn RadialSelector(
+    input_contents: Signal<String>,
+    radial_pos: Signal<Option<RadialInfo>>,
+) -> Element {
     rsx! {
         if let Some(RadialInfo { last_pos: (y, x), glyphs }) = radial_pos() {
             div { class: "radial-selector",
-                  style: "display: inline-block; position: absolute; top: {y}px; left: {x}px;",
-                  for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
-                      let angle = i as f32 * glyphs.len() as f32 / 360.0;
-                      let radius = 100;
-                      match glyph {
-                          E::Left(ref prims) => {
-                              let primes = prims.clone();
-                              rsx! {
-                                  button { class: "uiua-char-input uiua-radial-char-input",
-                                      style: "transform: rotate({angle}deg) translate({radius}px) rotate(-{angle}deg)",
-                                      position: "absolute",
-                                      top: "{y}px",
-                                      left: "{y}px",
-                                      onclick: move |evt| {
-                                          evt.prevent_default();
-                                          input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
-                                      },
-                                      for p in prims {
-                                          span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                                      }
-                                  }
-                              }
-                          },
+                  style: "display: inline-block; position: absolute; top: {y}px; left: {x}px;"
+            }
+            for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
+                let angle = i as f32 * TAU / (glyphs.len()-1) as f32;
+                info!("({y},{x})");
+                match glyph {
+                    E::Left(ref prims) => {
+                        let primes = prims.clone();
+                        rsx! {
+                            button { class: "uiua-char-input uiua-radial-char-input",
+                                     position: "absolute",
+                                     top: "calc({y}px + 100vw/5/2 + (100vw/5 - 30px)*sin({angle}) + 30px/2)",
+                                     left: "calc({x}px + 100vw/5/2 + (100vw/5 - 30px)*cos({angle}) + 30px/2)",  // 30px is the border of the radial-select
+                                     onclick: move |evt| {
+                                         evt.prevent_default();
+                                         input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                     },
+                                     for p in prims {
+                                         span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                     }
+                            }
+                        }
+                    },
 
-                          E::Right((s, c)) => {
-                              rsx! {
-                                  button {
-                                      onclick: move |e| {
-                                          e.prevent_default();
-                                          if &s != &EXPERIMENTAL_ICON {
-                                              input_contents.write().push_str(s);
-                                          }
-                                      },
-                                      class: "{c}", "{s}"
-                                  }
-                              }
-                          }
-                      }
-                  }}
+                    E::Right((s, c)) => {
+                        rsx! {
+                            button {
+                                onclick: move |e| {
+                                    e.prevent_default();
+                                    if &s != &EXPERIMENTAL_ICON {
+                                        input_contents.write().push_str(s);
+                                    }
+                                },
+                                class: "{c}", "{s}"
+                            }
+                        }
+                    }
+                }
+            }
             }
         } else {
             div { class: "radial-selector",

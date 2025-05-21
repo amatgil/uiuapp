@@ -109,15 +109,13 @@ button:hover {
 }
 
 .uiua-char-input {
-  aspect-ratio: 1 / 1;
-  font-size: 1rem;
-  font-weight: bold;
+    aspect-ratio: 1 / 1;
+    font-size: 1rem;
+    font-weight: bold;
 }
 
 .uiua-radial-char-input {
-  aspect-ratio: 1 / 1;
-  font-size: 1rem;
-  font-weight: bold;
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .user-input {
@@ -165,8 +163,8 @@ button:hover {
 }
 
 .radial-selector {
-    width: calc(100vw/5);
-    height: calc(100vw/5);
+    width: 20vw;
+    height: 20vw;
     border-radius: 50%;
     border-style: solid;
     border-width: 30px;

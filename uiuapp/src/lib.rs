@@ -1,8 +1,10 @@
-use uiua::Primitive as P;
+use std::f32::consts::PI;
 
+use uiua::Primitive as P;
 
 pub type ButtonIcon = Either<Vec<P>, (&'static str, &'static str)>;
 
+pub const TAU: f32 = 2.0 * PI;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Either<L, R> {
@@ -35,11 +37,11 @@ pub fn css_of_prim(p: &P) -> &'static str {
 #[derive(Debug, Clone)]
 pub struct RadialInfo {
     pub last_pos: (usize, usize),
-    pub glyphs: Vec<ButtonIcon>
+    pub glyphs: Vec<ButtonIcon>,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct LastTouchContext {
     pub last_touch: (usize, usize),
-    pub timestamp: (),
+    pub timestamp: (), // TODO
 }
