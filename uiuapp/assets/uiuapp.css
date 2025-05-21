@@ -47,7 +47,7 @@ button:hover {
     background-color: #1e1e2e;
     color: #cdd6f4;
     flex-grow: auto;
-    height: 100%;
+    flex: 1;
     /*border: 2px solid;*/
 }
 
@@ -57,8 +57,10 @@ button:hover {
 }
 
 .code-scrollbackbuffer {
-    overflow-y: scroll;
+    box-sizing: border-box;
     width: 100%;
+    overflow-y: auto;
+}
 }
 
 .code-buttons {
@@ -95,6 +97,7 @@ button:hover {
     border-bottom: solid;
     border-color: #181825;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-evenly; /* flex-end;*/
     gap: 0.3rem;
 }
@@ -106,6 +109,12 @@ button:hover {
 }
 
 .uiua-char-input {
+  aspect-ratio: 1 / 1;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.uiua-radial-char-input {
   aspect-ratio: 1 / 1;
   font-size: 1rem;
   font-weight: bold;
@@ -153,4 +162,15 @@ button:hover {
     background-size: 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.radial-selector {
+    width: calc(100vw/5);
+    height: calc(100vw/5);
+    border-radius: 50%;
+    border-style: solid;
+    border-width: 30px;
+    border-color: #181825;
+    background-color: rgba(0, 0, 0, 0);
+    pointer-events:none;
 }

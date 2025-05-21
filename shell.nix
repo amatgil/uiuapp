@@ -26,7 +26,7 @@ let
         hash =  "sha256-wuIJq+UN1q5qYW4TXivq93C9kZiPHwBW5Ty2Vpik2oY=";
       };
 
-      cargoHash = "sha256-r4O7DPNqPVxfhbLV8mFJoEYoPW8qb+KLlsJuSASYeVQ=";
+      cargoHash = "sha256-LnNLsU8bbbVIUltBbhLYkRTcFMPwkrLjHf19U44BHy4=";
 
       nativeBuildInputs = [
         pkg-config

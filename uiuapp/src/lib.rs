@@ -1,13 +1,17 @@
-use uiua::Primitive;
+use uiua::Primitive as P;
 
-#[derive(Debug, Clone, Copy)]
+
+pub type ButtonIcon = Either<Vec<P>, (&'static str, &'static str)>;
+
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Either<L, R> {
     Left(L),
     Right(R),
 }
 
-pub fn css_of_prim(p: &Primitive) -> &'static str {
-    let special_cased = [(Primitive::Transpose, "uiua-trans")];
+pub fn css_of_prim(p: &P) -> &'static str {
+    let special_cased = [(P::Transpose, "uiua-trans")];
     if let Some((_, s)) = special_cased.iter().find(|l| l.0 == *p) {
         s
     } else if let Some(args) = p.args() {
@@ -26,4 +30,16 @@ pub fn css_of_prim(p: &Primitive) -> &'static str {
     } else {
         ""
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct RadialInfo {
+    pub last_pos: (usize, usize),
+    pub glyphs: Vec<ButtonIcon>
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct LastTouchContext {
+    pub last_touch: (usize, usize),
+    pub timestamp: (),
 }

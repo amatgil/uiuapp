@@ -20,11 +20,14 @@ fn main() {
     launch(App);
 }
 
-type ButtonIcon = E<Vec<P>, (&'static str, &'static str)>;
 lazy_static! {
     /// The car of each line is the default icon. when pressed, the cdr is the radial menu icons
     static ref button_icons: [Vec<ButtonIcon>; 5 * 4] = [
-        vec![E::Left(vec![P::Add])],
+        vec![E::Left(vec![P::Add]), 
+             E::Left(vec![P::Sub]),
+             E::Left(vec![P::Mul]),
+             E::Left(vec![P::Div])
+        ],
         vec![E::Left(vec![P::Round])],
         vec![E::Left(vec![P::Gt])],
         vec![E::Left(vec![P::Shape])],
@@ -68,6 +71,10 @@ fn App() -> Element {
     });
     // Has been input but not yet evaluated
     let mut input_contents = use_signal(|| String::new());
+    //let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| None);
+    let mut touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None );
+    
+    let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| Some(RadialInfo { last_pos: (600, 200), glyphs: button_icons[0].clone() }));
 
     rsx! {
         Meta { charset: "UTF-8" }
@@ -117,15 +124,70 @@ fn App() -> Element {
                           button { onclick: move |_| {input_contents.write().pop();}, "Bksp" }
                     }
                     div { class: "input-grid-buttons",
-                           ButtonIcons { input_contents }
+                           ButtonIcons { input_contents, radial_pos }
                     }
               }
         }
+        RadialSelector { input_contents, radial_pos }
     }
 }
 
 #[component]
-fn ButtonIcons(input_contents: Signal<String>) -> Element {
+fn RadialSelector(input_contents: Signal<String>, radial_pos: Signal<Option<RadialInfo>>) -> Element {
+    rsx! {
+        if let Some(RadialInfo { last_pos: (y, x), glyphs }) = radial_pos() {
+            div { class: "radial-selector",
+                  style: "display: inline-block; position: absolute; top: {y}px; left: {x}px;",
+                  for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
+                      let angle = i as f32 * glyphs.len() as f32 / 360.0;
+                      let radius = 100;
+                      match glyph {
+                          E::Left(ref prims) => {
+                              let primes = prims.clone();
+                              rsx! {
+                                  button { class: "uiua-char-input uiua-radial-char-input",
+                                      style: "transform: rotate({angle}deg) translate({radius}px) rotate(-{angle}deg)",
+                                      position: "absolute",
+                                      top: "{y}px",
+                                      left: "{y}px",
+                                      onclick: move |evt| {
+                                          evt.prevent_default();
+                                          input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                      },
+                                      for p in prims {
+                                          span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                      }
+                                  }
+                              }
+                          },
+
+                          E::Right((s, c)) => {
+                              rsx! {
+                                  button {
+                                      onclick: move |e| {
+                                          e.prevent_default();
+                                          if &s != &EXPERIMENTAL_ICON {
+                                              input_contents.write().push_str(s);
+                                          }
+                                      },
+                                      class: "{c}", "{s}"
+                                  }
+                              }
+                          }
+                      }
+                  }}
+            }
+        } else {
+            div { class: "radial-selector",
+                  style: "display:none;"
+            }
+        }
+    }
+}
+
+
+#[component]
+fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<Option<RadialInfo>>) -> Element {
     rsx! {
         for button in button_icons.clone() {
             match button[0] {
@@ -161,3 +223,5 @@ fn ButtonIcons(input_contents: Signal<String>) -> Element {
         }
     }
 }
+
+
