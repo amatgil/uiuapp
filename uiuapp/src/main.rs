@@ -72,9 +72,14 @@ fn App() -> Element {
     // Has been input but not yet evaluated
     let mut input_contents = use_signal(|| String::new());
     //let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| None);
-    let mut touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None );
-    
-    let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| Some(RadialInfo { last_pos: (600, 200), glyphs: button_icons[0].clone() }));
+    let mut touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None);
+
+    let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| {
+        Some(RadialInfo {
+            last_pos: (600, 200),
+            glyphs: button_icons[0].clone(),
+        })
+    });
 
     rsx! {
         Meta { charset: "UTF-8" }
@@ -185,7 +190,6 @@ fn RadialSelector(input_contents: Signal<String>, radial_pos: Signal<Option<Radi
     }
 }
 
-
 #[component]
 fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<Option<RadialInfo>>) -> Element {
     rsx! {
@@ -223,5 +227,3 @@ fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<Option<RadialI
         }
     }
 }
-
-
