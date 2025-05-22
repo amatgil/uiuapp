@@ -152,8 +152,14 @@ fn App() -> Element {
                           textarea { class: "uiua-input", rows: 2,
                                      onkeypress: move |e| {
                                          e.prevent_default();
+                                         info!("{e:?}");
                                          if let Character(s) = e.key() {
-                                         input_contents.write().push_str(&s);
+                                             input_contents.write().push_str(&s);
+                                         // TODO: FIXME: 'onkeypress' does not handle backspace, so
+                                         // this doesn't work!
+                                         } else if let Key::Backspace = e.key() {
+                                             info!("Backspace gotten");
+                                             input_contents.write().pop();
                                          }
                                      },
                                      value: input_contents }
