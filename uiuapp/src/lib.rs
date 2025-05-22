@@ -7,19 +7,24 @@ pub type ButtonIcon = Either<Vec<P>, (&'static str, &'static str)>;
 pub const TAU: f32 = 2.0 * PI;
 pub const MAX_OUTPUT_CHARS: usize = 1000;
 
-pub fn run_uiua(code: &str) -> Result<String, String> {
+pub fn run_uiua(code: &str) -> Result<Vec<String>, String> {
     let mut runtime = uiua::Uiua::with_safe_sys();
     match runtime.run_str(code) {
         Ok(_compiler) => {
-            let Some(s) = runtime.take_stack().get(0).map(|v| v.show()) else { return Ok(String::new()); };
-            return if s.len() > MAX_OUTPUT_CHARS {
-                Ok(s.chars()
-                    .take(MAX_OUTPUT_CHARS)
-                    .chain(vec!['.', '.', '.'].into_iter())
-                    .collect())
-            } else {
-                Ok(s)
+            let mut out = vec![];
+            for s in runtime.take_stack() {
+                let s = s.show();
+                if s.len() > MAX_OUTPUT_CHARS {
+                    out.push(s.chars()
+                        .take(MAX_OUTPUT_CHARS)
+                        .chain(vec!['.', '.', '.'].into_iter())
+                        .collect());
+                } else {
+                    out.push(s);
+                }
             }
+
+            return Ok(out);
         }
         Err(e) => Err(e.to_string()),
     }
@@ -63,4 +68,11 @@ pub struct RadialInfo {
 pub struct LastTouchContext {
     pub last_touch: (usize, usize),
     pub timestamp: (), // TODO
+}
+
+
+#[derive(Debug, Clone)]
+pub enum ScrollbackItem {
+    Input(String),
+    Output(String)
 }

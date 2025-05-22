@@ -5,6 +5,7 @@ use dioxus::prelude::Key::Character;
 use dioxus::prelude::*;
 use dioxus_logger::tracing::{info, Level};
 use uiuapp::*;
+use uiuapp::ScrollbackItem as SBI;
 
 use lazy_static::lazy_static;
 use uiua::Primitive as P;
@@ -77,16 +78,16 @@ fn App() -> Element {
 
     // the text that's been input and evaluated
     // populated for testing
-    let mut buffer_contents = use_signal(|| {
+    let mut buffer_contents: Signal<Vec<SBI>> = use_signal(|| {
         vec![
-            "+ 1 1".to_string(),
-            "2".to_string(),
-            "˙⊞=⇡3".to_string(),
-            "1 0 0\n0 1 0\n0 0 1".to_string(),
-            "˙⊞=⇡3".to_string(),
-            "1 0 0\n0 1 0\n0 0 1".to_string(),
-            "˙⊞=⇡3".to_string(),
-            "1 0 0\n0 1 0\n0 0 1".to_string(),
+            SBI::Input("+ 1 1".to_string()),
+            SBI::Output("2".to_string()),
+            SBI::Input("˙⊞=⇡3".to_string()),
+            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
+            SBI::Input("˙⊞=⇡3".to_string()),
+            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
+            SBI::Input("˙⊞=⇡3".to_string()),
+            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
         ]
     });
     // Has been input but not yet evaluated
@@ -114,22 +115,25 @@ fn App() -> Element {
               div { class: "code-zone",
                     div { class: "code-display-zone",
                           div { class: "code-scrollbackbuffer",
-                                for (i, text) in buffer_contents.read().iter().enumerate() {
+                                for (i, item) in buffer_contents.read().iter().enumerate() {
                                     {
-                                        if i % 2 == 0 {
-                                            let t = text.clone();
-                                            rsx! {
-                                                p { class: "user-input",
+                                        match item {
+                                            SBI::Input(text) => {
+                                                let t = text.clone();
+                                                rsx! {
+                                                    p { class: "user-input",
                                                     onclick: move |_e| {
                                                         if input_contents().is_empty() {
                                                             *input_contents.write() = t.clone();
                                                         }
                                                     },
                                                     "{text}" }
-                                            }
-                                        } else {
-                                            rsx! {
-                                                p { class: "user-result", "{text}" }
+                                                }
+                                            },
+                                            SBI::Output(text) => {
+                                                rsx! {
+                                                    p { class: "user-result", "{text}" }
+                                                }
                                             }
                                         }
                                     }
@@ -157,13 +161,15 @@ fn App() -> Element {
                                    onclick: move |e| {
                                        match run_uiua(&input_contents()) {
                                            Ok(v) =>  {
-                                               buffer_contents.write().push(input_contents.read().clone());
-                                               buffer_contents.write().push(v);
+                                               buffer_contents.write().push(SBI::Input(input_contents.read().clone()));
+                                               for s in v {
+                                                   buffer_contents.write().push(SBI::Output(s));
+                                               }
                                                *input_contents.write() = String::new();
                                            },
                                            Err(s) => {
-                                               buffer_contents.write().push(input_contents.read().clone());
-                                               buffer_contents.write().push(s);
+                                               buffer_contents.write().push(SBI::Input(input_contents.read().clone()));
+                                               buffer_contents.write().push(SBI::Output(s));
                                                *input_contents.write() = String::new();
                                            }
                                        }
