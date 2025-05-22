@@ -77,7 +77,7 @@ fn App() -> Element {
 
     // the text that's been input and evaluated
     // populated for testing
-    let buffer_contents = use_signal(|| {
+    let mut buffer_contents = use_signal(|| {
         vec![
             "+ 1 1".to_string(),
             "2".to_string(),
@@ -115,15 +115,33 @@ fn App() -> Element {
                     div { class: "code-display-zone",
                           div { class: "code-scrollbackbuffer",
                                 for (i, text) in buffer_contents.read().iter().enumerate() {
-                                    if i % 2 == 0 {
-                                        p { class: "user-input", "{text}" }
-                                    } else {
-                                        p { class: "user-result", "{text}" }
+                                    {
+                                        if i % 2 == 0 {
+                                            let t = text.clone();
+                                            rsx! {
+                                                p { class: "user-input",
+                                                    onclick: move |_e| {
+                                                        if input_contents().is_empty() {
+                                                            *input_contents.write() = t.clone();
+                                                        }
+                                                    },
+                                                    "{text}" }
+                                            }
+                                        } else {
+                                            rsx! {
+                                                p { class: "user-result", "{text}" }
+                                            }
+                                        }
                                     }
                                 }
                           }
                           div { class: "code-buttons",
-                                button { "Settings" }
+                              button { 
+                                  onclick: move |e| {
+                                      info!("Settings button pressed (unimplemented as of yet)");
+                                  },
+                                  "Settings" 
+                              }
                           }
                     }
                     div { class: "code-textarea-zone",
@@ -135,7 +153,22 @@ fn App() -> Element {
                                          }
                                      },
                                      value: input_contents }
-                          button { class: "run-button", "Run" },
+                          button { class: "run-button",
+                                   onclick: move |e| {
+                                       match run_uiua(&input_contents()) {
+                                           Ok(v) =>  {
+                                               buffer_contents.write().push(input_contents.read().clone());
+                                               buffer_contents.write().push(v);
+                                               *input_contents.write() = String::new();
+                                           },
+                                           Err(s) => {
+                                               buffer_contents.write().push(input_contents.read().clone());
+                                               buffer_contents.write().push(s);
+                                               *input_contents.write() = String::new();
+                                           }
+                                       }
+                                   },
+                                   "Run" },
                     }
               }
               div { class: "input-zone",
