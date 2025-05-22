@@ -167,6 +167,8 @@ fn App() -> Element {
                                    onclick: move |e| {
                                        match run_uiua(&input_contents()) {
                                            Ok(v) =>  {
+                                               // TODO: The pushed Input should be the formatted
+                                               // string instead of the input string
                                                buffer_contents.write().push(SBI::Input(input_contents.read().clone()));
                                                for s in v {
                                                    buffer_contents.write().push(SBI::Output(s));
