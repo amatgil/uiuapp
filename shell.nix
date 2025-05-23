@@ -17,6 +17,16 @@ let
       targets = [ "wasm32-unknown-unknown" ];
     })
 
+    # For linux native
+    pkg-config
+    glib
+    gdk-pixbuf
+    cairo
+    gtk3
+    webkit2gtk-sys
+    libsoup
+
+
     (rustPlatformD.buildRustPackage rec {
       pname = "dioxus-cli";
       version = "0.6.3";

@@ -76,3 +76,28 @@ pub enum ScrollbackItem {
     Input(String),
     Output(String)
 }
+
+
+use dioxus::prelude::*;
+pub fn handle_running_code(mut input_contents: Signal<String>, mut buffer_contents: Signal<Vec<ScrollbackItem>>,) {
+    use ScrollbackItem as SBI;
+    match run_uiua(&input_contents()) {
+        Ok(v) =>  {
+            // TODO: The pushed Input should be the formatted
+            // string instead of the input string
+            buffer_contents.write().push(SBI::Input(input_contents.read().clone()));
+            for s in v {
+                buffer_contents.write().push(SBI::Output(s));
+            }
+            *input_contents.write() = String::new();
+        },
+        Err(s) => {
+            buffer_contents.write().push(SBI::Input(input_contents.read().clone()));
+            buffer_contents.write().push(SBI::Output(s));
+            *input_contents.write() = String::new();
+        }
+    }
+
+
+}
+

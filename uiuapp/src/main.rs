@@ -4,8 +4,8 @@ use crate::document::*;
 use dioxus::prelude::Key::Character;
 use dioxus::prelude::*;
 use dioxus_logger::tracing::{info, Level};
-use uiuapp::*;
 use uiuapp::ScrollbackItem as SBI;
+use uiuapp::*;
 
 use lazy_static::lazy_static;
 use uiua::Primitive as P;
@@ -140,47 +140,35 @@ fn App() -> Element {
                                 }
                           }
                           div { class: "code-buttons",
-                              button { 
+                              button {
                                   onclick: move |e| {
                                       info!("Settings button pressed (unimplemented as of yet)");
                                   },
-                                  "Settings" 
+                                  "Settings"
                               }
                           }
                     }
                     div { class: "code-textarea-zone",
-                    /// This textarea should bring up the native keyboard for
-                    /// ascii-and-related typing
+                    // This textarea should bring up the native keyboard for
+                    // ascii-and-related typing
                           textarea { class: "uiua-input", rows: 2,
                                      onkeydown: move |e| {
-                                         e.prevent_default();
-                                         info!("{e:?}");
-                                         if let Character(s) = e.key() {
-                                             input_contents.write().push_str(&s);
-                                         } else if let Key::Backspace = e.key() {
-                                             info!("Backspace gotten");
-                                             input_contents.write().pop();
+                                         if let Key::Enter = e.key() {
+                                             info!("Return gotten");
+                                             if e.modifiers().contains(Modifiers::CONTROL) {
+                                                 e.prevent_default();
+                                                 info!("Running from shortcut");
+                                                 handle_running_code(input_contents, buffer_contents);
+                                             }
                                          }
+                                     },
+                                     onchange: move |e| {
+                                         *input_contents.write() = e.value();
                                      },
                                      value: input_contents }
                           button { class: "run-button",
                                    onclick: move |e| {
-                                       match run_uiua(&input_contents()) {
-                                           Ok(v) =>  {
-                                               // TODO: The pushed Input should be the formatted
-                                               // string instead of the input string
-                                               buffer_contents.write().push(SBI::Input(input_contents.read().clone()));
-                                               for s in v {
-                                                   buffer_contents.write().push(SBI::Output(s));
-                                               }
-                                               *input_contents.write() = String::new();
-                                           },
-                                           Err(s) => {
-                                               buffer_contents.write().push(SBI::Input(input_contents.read().clone()));
-                                               buffer_contents.write().push(SBI::Output(s));
-                                               *input_contents.write() = String::new();
-                                           }
-                                       }
+                                       handle_running_code(input_contents, buffer_contents);
                                    },
                                    "Run" },
                     }
@@ -188,6 +176,9 @@ fn App() -> Element {
               div { class: "input-zone",
                     div { class: "special-buttons",
                           button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
+                          button { onclick: move |_| {
+                              *buffer_contents.write() = vec![];
+                          }, "Clear" }
                           button { onclick: move |_| {input_contents.write().push(';');}, ";" }
                           button { "←" } // TODO: position cursor
                           button { "↓" }
