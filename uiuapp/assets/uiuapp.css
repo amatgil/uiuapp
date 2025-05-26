@@ -61,7 +61,6 @@ button:hover {
     width: 100%;
     overflow-y: auto;
 }
-}
 
 .code-buttons {
     position: absolute;
@@ -165,12 +164,38 @@ button:hover {
 }
 
 .radial-selector {
-    width: calc(100vw/5);
-    height: calc(100vw/5);
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-inline: auto;
+    width: calc(100vw/3);
+    height: calc(100vw/3);
     border-radius: 50%;
-    border-style: solid;
-    border-width: 30px;
-    border-color: #181825;
-    background-color: rgba(0, 0, 0, 0);
-    pointer-events:none;
+    background-color: transparent;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.radial-selector::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: conic-gradient(green 0% 25%, blue 25% 50%, yellow 50% 75%, purple 75% 100%);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+.radial-selector::after {
+    content: '';
+    position: absolute;
+    top: 4vw;
+    left: 4vw;
+    right: 4vw;
+    bottom: 4vw;
+    background: #45475a;
+    border-radius: 50%;
+    z-index: 3;
 }

@@ -23,7 +23,7 @@ fn main() {
 lazy_static! {
     /// The car of each line is the default icon. when pressed, the cdr is the radial menu icons
     static ref button_icons: [Vec<ButtonIcon>; 5 * 4] = [
-        vec![E::Left(vec![P::Add]), 
+        vec![E::Left(vec![P::Add]),
              E::Left(vec![P::Sub]),
              E::Left(vec![P::Mul]),
              E::Left(vec![P::Div])
@@ -119,6 +119,7 @@ fn App() -> Element {
                     }
               }
               div { class: "input-zone",
+                    RadialSelector { input_contents, radial_pos }
                     div { class: "special-buttons",
                           button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
                           button { onclick: move |_| {input_contents.write().push(';');}, ";" }
@@ -133,16 +134,17 @@ fn App() -> Element {
                     }
               }
         }
-        RadialSelector { input_contents, radial_pos }
     }
 }
 
 #[component]
-fn RadialSelector(input_contents: Signal<String>, radial_pos: Signal<Option<RadialInfo>>) -> Element {
+fn RadialSelector(
+    input_contents: Signal<String>,
+    radial_pos: Signal<Option<RadialInfo>>,
+) -> Element {
     rsx! {
         if let Some(RadialInfo { last_pos: (y, x), glyphs }) = radial_pos() {
             div { class: "radial-selector",
-                  style: "display: inline-block; position: absolute; top: {y}px; left: {x}px;",
                   for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
                       let angle = i as f32 * glyphs.len() as f32 / 360.0;
                       let radius = 100;
