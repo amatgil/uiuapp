@@ -121,6 +121,7 @@ fn App() -> Element {
                     }
               }
               div { class: "input-zone",
+                    RadialSelector { input_contents, radial_pos }
                     div { class: "special-buttons",
                           button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
                           button { onclick: move |_| {
@@ -138,7 +139,6 @@ fn App() -> Element {
                     }
               }
         }
-        RadialSelector { input_contents, radial_pos }
     }
 }
 
@@ -150,29 +150,28 @@ fn RadialSelector(
     rsx! {
         if let Some(RadialInfo { last_pos: (y, x), glyphs }) = radial_pos() {
             div { class: "radial-selector",
-                  style: "display: inline-block; position: absolute; top: {y}px; left: {x}px;"
-            }
-            for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
-                let angle = i as f32 * TAU / (glyphs.len()-1) as f32;
-                info!("({y},{x})");
-                match glyph {
-                    E::Left(ref prims) => {
-                        let primes = prims.clone();
-                        rsx! {
-                            button { class: "uiua-char-input uiua-radial-char-input",
-                                     position: "absolute",
-                                     top: "calc({y}px + 100vw/5/2 + (100vw/5 - 30px)*sin({angle}) + 30px/2)",
-                                     left: "calc({x}px + 100vw/5/2 + (100vw/5 - 30px)*cos({angle}) + 30px/2)",  // 30px is the border of the radial-select
-                                     onclick: move |evt| {
-                                         evt.prevent_default();
-                                         input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
-                                     },
-                                     for p in prims {
-                                         span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                                     }
-                            }
-                        }
-                    },
+                  for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
+                      let angle = i as f32 * glyphs.len() as f32 / 360.0;
+                      let radius = 100;
+                      match glyph {
+                          E::Left(ref prims) => {
+                              let primes = prims.clone();
+                              rsx! {
+                                  button { class: "uiua-char-input uiua-radial-char-input",
+                                      style: "transform: rotate({angle}deg) translate({radius}px) rotate(-{angle}deg)",
+                                      position: "absolute",
+                                      top: "{y}px",
+                                      left: "{y}px",
+                                      onclick: move |evt| {
+                                          evt.prevent_default();
+                                          input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                      },
+                                      for p in prims {
+                                          span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                      }
+                                  }
+                              }
+                          },
 
                     E::Right((s, c)) => {
                         rsx! {
