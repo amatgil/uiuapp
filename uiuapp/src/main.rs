@@ -150,44 +150,46 @@ fn RadialSelector(
     rsx! {
         if let Some(RadialInfo { last_pos: (y, x), glyphs }) = radial_pos() {
             div { class: "radial-selector",
-                  for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
-                      let angle = i as f32 * glyphs.len() as f32 / 360.0;
-                      let radius = 100;
-                      match glyph {
-                          E::Left(ref prims) => {
-                              let primes = prims.clone();
-                              rsx! {
-                                  button { class: "uiua-char-input uiua-radial-char-input",
-                                      style: "transform: rotate({angle}deg) translate({radius}px) rotate(-{angle}deg)",
-                                      position: "absolute",
-                                      top: "{y}px",
-                                      left: "{y}px",
-                                      onclick: move |evt| {
-                                          evt.prevent_default();
-                                          input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
-                                      },
-                                      for p in prims {
-                                          span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                  for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() {
+                      {
+                          let angle = i as f32 * glyphs.len() as f32 / 360.0;
+                          let radius = 100;
+                          match glyph {
+                              E::Left(ref prims) => {
+                                  let primes = prims.clone();
+                                  rsx! {
+                                      button { class: "uiua-char-input uiua-radial-char-input",
+                                          style: "transform: rotate({angle}deg) translate({radius}px) rotate(-{angle}deg)",
+                                          position: "absolute",
+                                          top: "{y}px",
+                                          left: "{y}px",
+                                          onclick: move |evt| {
+                                              evt.prevent_default();
+                                              input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                          },
+                                          for p in prims {
+                                              span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                          }
+                                      }
+                                  }
+                              },
+
+                              E::Right((s, c)) => {
+                                  rsx! {
+                                      button {
+                                          onclick: move |e| {
+                                              e.prevent_default();
+                                              if &s != &EXPERIMENTAL_ICON {
+                                                  input_contents.write().push_str(s);
+                                              }
+                                          },
+                                          class: "{c}", "{s}"
                                       }
                                   }
                               }
-                          },
-
-                    E::Right((s, c)) => {
-                        rsx! {
-                            button {
-                                onclick: move |e| {
-                                    e.prevent_default();
-                                    if &s != &EXPERIMENTAL_ICON {
-                                        input_contents.write().push_str(s);
-                                    }
-                                },
-                                class: "{c}", "{s}"
-                            }
-                        }
-                    }
-                }
-            }
+                          }
+                      }
+                  }
             }
         } else {
             div { class: "radial-selector",
