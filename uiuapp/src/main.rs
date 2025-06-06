@@ -1,157 +1,19 @@
 #![allow(non_snake_case)]
 
 use crate::document::*;
-use dioxus::prelude::Key::Character;
 use dioxus::prelude::*;
 use dioxus_logger::tracing::{info, Level};
 use uiuapp::ScrollbackItem as SBI;
 use uiuapp::*;
 
-use lazy_static::lazy_static;
 use uiua::Primitive as P;
 use uiuapp::Either as E;
-
-const UNKNOWN_GLYPH: char = '¡';
-const EXPERIMENTAL_ICON: &str = "🧪";
-const KEYPAD_WIDTH: usize = 4; // Grid size
-const KEYPAD_HEIGHT: usize = 5; // Grid size
 
 fn main() {
     // Init logger
     dioxus_logger::init(Level::INFO).expect("failed to init logger");
     info!("starting app");
     launch(App);
-}
-
-// Tiny convenience
-fn l(p: P) -> Either<Vec<P>, (&'static str, &'static str)> {
-    E::Left(vec![p])
-}
-
-lazy_static! {
-        //vec![E::Left(vec![P::Add]),
-        //     E::Left(vec![P::Sub]),
-        //     E::Left(vec![P::Mul]),
-        //     E::Left(vec![P::Div]),
-        //     E::Left(vec![P::Round]),
-        //     E::Left(vec![P::Floor]),
-        //     E::Left(vec![P::Ceil]), // Ceils because testing
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //     E::Left(vec![P::Ceil]),
-        //],
-    /// The car of each line is the default icon. when pressed, the cdr is the radial menu icons
-    static ref button_icons: [Vec<ButtonIcon>; KEYPAD_HEIGHT * KEYPAD_WIDTH] = [
-        vec![
-            l(P::Identity),
-            l(P::Slf),
-            l(P::Backward),
-            l(P::Pop),
-            l(P::Dup),
-            l(P::Flip),
-        ],
-        vec![l(P::Dip), l(P::Gap), l(P::On), l(P::By)],
-        vec![
-            l(P::Fork),
-            l(P::Both),
-            l(P::Bracket),
-            l(P::Switch),
-            l(P::Try),
-            l(P::Case),
-            l(P::Do),
-            l(P::Assert),
-        ],
-        vec![l(P::Un), l(P::Anti), l(P::Under), l(P::Obverse)],
-        vec![
-            l(P::Neg),
-            l(P::Add),
-            l(P::Not),
-            l(P::Abs),
-            l(P::Sqrt),
-            l(P::Sin),
-            l(P::Floor),
-            l(P::Ceil),
-            l(P::Round),
-        ],
-        vec![
-            l(P::Eq),
-            l(P::Ne),
-            l(P::Le),
-            l(P::Lt),
-            l(P::Gt),
-            l(P::Ge),
-            l(P::Min),
-            l(P::Max),
-        ],
-        vec![l(P::Eta), l(P::Pi), l(P::Tau), l(P::Infinity)],
-        vec![
-            l(P::Len),
-            l(P::Shape),
-            l(P::First),
-            l(P::Last),
-            l(P::Reverse),
-            l(P::Deshape),
-            l(P::Fix),
-            l(P::Transpose),
-        ],
-        vec![l(P::Bits), l(P::Where), l(P::Parse)],
-        vec![
-            l(P::Sort),
-            l(P::Rise),
-            l(P::Fall),
-            l(P::Classify),
-            l(P::Deduplicate),
-            l(P::Unique),
-        ],
-        vec![l(P::Box), l(P::Content), l(P::Inventory)],
-        vec![
-            l(P::Couple),
-            l(P::Join),
-            l(P::Select),
-            l(P::Pick),
-            l(P::Reshape),
-            l(P::Drop),
-            l(P::Take),
-            l(P::Rotate),
-            l(P::Keep),
-            l(P::Orient),
-        ],
-        vec![
-            l(P::Match),
-            l(P::Find),
-            l(P::Mask),
-            l(P::MemberOf),
-            l(P::IndexOf),
-            l(P::Partition),
-            l(P::Group),
-        ],
-        vec![l(P::Reduce), l(P::Fold), l(P::Scan), l(P::Repeat)],
-        vec![l(P::Rows), l(P::Table), l(P::Tuples), l(P::Stencil)],
-        //[
-        //  {∘"˙˜◌.:"    ⊙"⋅⟜⊸⤙⤚◡"      ⊃"∩⊓⨬⍣⍩⍢⍤"  °"⌝⍜⌅"}
-        //  {¯"±¬⌵√∿⌊⌈⁅" +"-×÷◿ⁿₙ∠ℂ⊥"   ="≠<≤>≥↧↥"  ⚂"ηπτ∞"}
-        //  {⧻"△⊢⊣⇌♭¤⍉"  ⇡"⋯⊚⋕"         ⍆"⍏⍖⊛◴◰"    □"◇⍚"}
-        //  {⊟"⊂⊏⊡↯↙↘↻▽" ≍"⌕⦷∊⊗⊕⊜"      /"∧\\⍥"     ≡"⊞⧅⧈"}
-        //]
-        vec![E::Right(("Empty", ""))],
-        vec![E::Right(("0", "constant-value"))],
-        vec![E::Right(("₀", "constant-value"))],
-        vec![E::Right((EXPERIMENTAL_ICON, ""))],
-        vec![E::Left(vec![P::Sub, P::By, P::Neg])],
-    ];
 }
 
 #[component]
