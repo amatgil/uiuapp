@@ -6,7 +6,6 @@ use dioxus_logger::tracing::{info, Level};
 use uiuapp::ScrollbackItem as SBI;
 use uiuapp::*;
 
-use uiua::Primitive as P;
 use uiuapp::Either as E;
 
 fn main() {
