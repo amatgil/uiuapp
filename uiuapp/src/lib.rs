@@ -37,7 +37,10 @@ pub enum Either<L, R> {
 }
 
 pub fn css_of_prim(p: &P) -> &'static str {
-    let special_cased = [(P::Transpose, "uiua-trans")];
+    let special_cased = [
+        (P::Transpose, "uiua-trans"),
+        (P::Identity, "stack-function"),
+    ];
     if let Some((_, s)) = special_cased.iter().find(|l| l.0 == *p) {
         s
     } else if let Some(args) = p.args() {

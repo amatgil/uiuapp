@@ -61,7 +61,7 @@ button:hover {
     width: 100%;
     overflow-y: auto;
 }
-}
+
 
 .code-buttons {
     position: absolute;
@@ -104,6 +104,7 @@ button:hover {
 
 .input-grid-buttons {
     display: grid;
+    /* Change if grid dimension changes */
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr 1fr;
 }
