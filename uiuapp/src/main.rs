@@ -162,7 +162,7 @@ fn App() -> Element {
     // the text that's been input and evaluated
     // populated for testing
     // TODO(release): depopulate
-    let buffer_contents = use_signal(|| {
+    let mut buffer_contents = use_signal(|| {
         vec![
             SBI::Input("+ 1 1".to_string()),
             SBI::Output("2".to_string()),
