@@ -127,6 +127,7 @@ lazy_static! {
             l(P::Take),
             l(P::Rotate),
             l(P::Keep),
+            l(P::Orient),
         ],
         vec![
             l(P::Match),
