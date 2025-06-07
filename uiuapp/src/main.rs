@@ -52,49 +52,48 @@ fn App() -> Element {
     rsx! {
         Meta { charset: "UTF-8" }
         Meta {
-            content: "width=device-width, initial-scale=1.0",
+            content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
             name: "viewport",
         }
         Title { "cas/uiuapp" }
         Stylesheet { href: CSS }
 
         div { class: "wrapper",
-              div { class: "code-zone",
-                    div { class: "code-display-zone",
-                          div { class: "code-scrollbackbuffer",
-                                for (i, item) in buffer_contents.read().iter().enumerate() {
-                                    {
-                                        match item {
-                                            SBI::Input(text) => {
-                                                let t = text.clone();
-                                                rsx! {
-                                                    p { class: "user-input",
-                                                    onclick: move |_e| {
-                                                        if input_contents().is_empty() {
-                                                            *input_contents.write() = t.clone();
-                                                        }
-                                                    },
-                                                    "{text}" }
-                                                }
-                                            },
-                                            SBI::Output(text) => {
-                                                rsx! {
-                                                    p { class: "user-result", "{text}" }
-                                                }
-                                            }
+            div { class: "top-bar",
+                button {
+                    onclick: move |e| {
+                        info!("Settings button pressed (unimplemented as of yet)");
+                    },
+                    "Settings"
+                }
+            }
+            div { class: "code-zone",
+                for (i, item) in buffer_contents.read().iter().enumerate() {
+                    {
+                        match item {
+                            SBI::Input(text) => {
+                                let t = text.clone();
+                                rsx! {
+                                    p { class: "user-input",
+                                    onclick: move |_e| {
+                                        if input_contents().is_empty() {
+                                            *input_contents.write() = t.clone();
                                         }
-                                    }
+                                    },
+                                    "{text}" }
                                 }
-                          }
-                          div { class: "code-buttons",
-                              button {
-                                  onclick: move |e| {
-                                      info!("Settings button pressed (unimplemented as of yet)");
-                                  },
-                                  "Settings"
-                              }
-                          }
+                            },
+                            SBI::Output(text) => {
+                                rsx! {
+                                    p { class: "user-result", "{text}" }
+                                }
+                            }
+                        }
                     }
+                }
+            }
+              div { class: "input-zone",
+                    RadialSelector { input_contents, radial_pos }
                     div { class: "code-textarea-zone",
                     // This textarea should bring up the native keyboard for
                     // ascii-and-related typing
@@ -119,8 +118,6 @@ fn App() -> Element {
                                    },
                                    "Run" },
                     }
-              }
-              div { class: "input-zone",
                     div { class: "special-buttons",
                           button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
                           button { onclick: move |_| {
@@ -138,7 +135,6 @@ fn App() -> Element {
                     }
               }
         }
-        RadialSelector { input_contents, radial_pos }
     }
 }
 
@@ -150,45 +146,43 @@ fn RadialSelector(
     rsx! {
         if let Some(RadialInfo { last_pos: (y, x), glyphs }) = radial_pos() {
             div { class: "radial-selector",
-                  style: "display: inline-block; position: absolute; top: {y}px; left: {x}px;"
-            }
-            for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
-                let angle = i as f32 * TAU / (glyphs.len()-1) as f32;
-                info!("({y},{x})");
-                match glyph {
-                    E::Left(ref prims) => {
-                        let primes = prims.clone();
-                        rsx! {
-                            button { class: "uiua-char-input uiua-radial-char-input",
-                                     position: "absolute",
-                                     top: "calc({y}px + 100vw/5/2 + (100vw/5 - 30px)*sin({angle}) + 30px/2)",
-                                     left: "calc({x}px + 100vw/5/2 + (100vw/5 - 30px)*cos({angle}) + 30px/2)",  // 30px is the border of the radial-select
-                                     onclick: move |evt| {
-                                         evt.prevent_default();
-                                         input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
-                                     },
-                                     for p in prims {
-                                         span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                                     }
-                            }
-                        }
-                    },
+                  for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() {
+                      {
+                          let angle = i as f32 * glyphs.len() as f32 / 360.0;
+                          let radius = 100;
+                          match glyph {
+                              E::Left(ref prims) => {
+                                  let primes = prims.clone();
+                                  rsx! {
+                                      button { class: "uiua-char-input uiua-radial-char-input",
+                                          // style: "transform: rotate({angle}deg) translate({radius}px) rotate(-{angle}deg)",
+                                          onclick: move |evt| {
+                                              evt.prevent_default();
+                                              input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                          },
+                                          for p in prims {
+                                              span { class: css_of_prim(p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                          }
+                                      }
+                                  }
+                              },
 
-                    E::Right((s, c)) => {
-                        rsx! {
-                            button {
-                                onclick: move |e| {
-                                    e.prevent_default();
-                                    if &s != &EXPERIMENTAL_ICON {
-                                        input_contents.write().push_str(s);
-                                    }
-                                },
-                                class: "{c}", "{s}"
-                            }
-                        }
-                    }
-                }
-            }
+                              E::Right((s, c)) => {
+                                  rsx! {
+                                      button {
+                                          onclick: move |e| {
+                                              e.prevent_default();
+                                              if s != EXPERIMENTAL_ICON {
+                                                  input_contents.write().push_str(s);
+                                              }
+                                          },
+                                          class: "{c}", "{s}"
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  }
             }
         } else {
             div { class: "radial-selector",
