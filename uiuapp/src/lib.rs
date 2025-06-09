@@ -9,6 +9,7 @@ pub const TAU: f32 = 2.0 * PI;
 pub const MAX_OUTPUT_CHARS: usize = 1000;
 pub const UNKNOWN_GLYPH: char = '¡';
 pub const EXPERIMENTAL_ICON: &str = "🧪";
+const DEADZONE_RADIUS: f64 = 30.;
 
 pub fn run_uiua(code: &str) -> Result<Vec<String>, String> {
     let mut runtime = uiua::Uiua::with_safe_sys();
@@ -67,10 +68,38 @@ pub fn css_of_prim(p: &P) -> &'static str {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RadialInfo {
-    pub last_pos: (usize, usize),
+    pub is_active: bool,
+    pub starting_position: Point2D<f64, ScreenSpace>,
+    pub current_position: Point2D<f64, ScreenSpace>,
     pub glyphs: Vec<ButtonIcon>,
+}
+
+impl RadialInfo {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn start(&mut self, coord: Point2D<f64, ScreenSpace>) {
+        self.starting_position = coord;
+        self.current_position = coord;
+    }
+
+    pub fn update(&mut self, coord: Point2D<f64, ScreenSpace>) {
+        self.current_position = coord;
+        if !self.is_active && self.should_activate() {
+            self.is_active = true;
+        }
+    }
+    pub fn should_activate(&self) -> bool {
+        self.starting_position.distance_to(self.current_position) > DEADZONE_RADIUS
+    }
+    pub fn reset(&mut self) {
+        self.is_active = false;
+        self.starting_position = Point2D::default();
+        self.current_position = Point2D::default();
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -85,7 +114,13 @@ pub enum ScrollbackItem {
     Output(String),
 }
 
-use dioxus::prelude::*;
+use dioxus::{
+    html::geometry::{
+        euclid::{default, Point2D},
+        Coordinates, ScreenSpace,
+    },
+    prelude::*,
+};
 pub fn handle_running_code(
     mut input_contents: Signal<String>,
     mut buffer_contents: Signal<Vec<ScrollbackItem>>,
@@ -165,7 +200,7 @@ lazy_static! {
             l(P::Group)
         ],
 
-        // ====== ROW ONE ======
+        // ====== ROW TWO ======
 
         // MAr
         vec![

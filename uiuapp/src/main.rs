@@ -41,13 +41,7 @@ fn App() -> Element {
     let mut touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None);
 
     // TODO(release): depopulate
-    let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| {
-        None
-        //Some(RadialInfo {
-        //    last_pos: (300, 200),
-        //    glyphs: button_icons[0].clone(),
-        //})
-    });
+    let mut radial_pos: Signal<RadialInfo> = use_signal(|| RadialInfo::new());
 
     rsx! {
         Meta { charset: "UTF-8" }
@@ -58,7 +52,7 @@ fn App() -> Element {
         Title { "cas/uiuapp" }
         Stylesheet { href: CSS }
 
-        div { class: "wrapper",
+        div { class: "app",
             div { class: "top-bar",
                 button {
                     onclick: move |e| {
@@ -67,7 +61,7 @@ fn App() -> Element {
                     "Settings"
                 }
             }
-            div { class: "code-zone",
+            div { class: "code-view-zone",
                 for (i, item) in buffer_contents.read().iter().enumerate() {
                     {
                         match item {
@@ -94,10 +88,10 @@ fn App() -> Element {
             }
               div { class: "input-zone",
                     RadialSelector { input_contents, radial_pos }
-                    div { class: "code-textarea-zone",
+                    div { class: "input-bar",
                     // This textarea should bring up the native keyboard for
                     // ascii-and-related typing
-                          textarea { class: "uiua-input", rows: 2,
+                          textarea { class: "text-box", rows: 1,
                                      onkeydown: move |e| {
                                          if let Key::Enter = e.key() {
                                              info!("Return gotten");
@@ -139,16 +133,13 @@ fn App() -> Element {
 }
 
 #[component]
-fn RadialSelector(
-    input_contents: Signal<String>,
-    radial_pos: Signal<Option<RadialInfo>>,
-) -> Element {
+fn RadialSelector(input_contents: Signal<String>, radial_pos: Signal<RadialInfo>) -> Element {
     rsx! {
-        if let Some(RadialInfo { last_pos: (y, x), glyphs }) = radial_pos() {
+            if radial_pos.read().is_active {
             div { class: "radial-selector",
-                  for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() {
+                  for (i, glyph) in radial_pos().glyphs.clone().into_iter().skip(1).enumerate() {
                       {
-                          let angle = i as f32 * glyphs.len() as f32 / 360.0;
+                          let angle = i as f32 * radial_pos().glyphs.len() as f32 / 360.0;
                           let radius = 100;
                           match glyph {
                               E::Left(ref prims) => {
@@ -193,7 +184,7 @@ fn RadialSelector(
 }
 
 #[component]
-fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<Option<RadialInfo>>) -> Element {
+fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<RadialInfo>) -> Element {
     rsx! {
         for button in button_icons.clone() {
             match button[0] {
@@ -201,12 +192,19 @@ fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<Option<RadialI
                     let primes = prims.clone();
                     rsx! {
                         button { class: "uiua-char-input",
-                                 onclick: move |evt| {
-                                     evt.prevent_default();
-                                     input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
-                                 },
+                            onpointerdown: move |evt| {
+                            radial_pos.write().start(evt.data.screen_coordinates());
+                            },
+                            onpointermove: move |evt| {
+                            radial_pos.write().update(evt.data.screen_coordinates());
+                            },
+                            onpointerup: move |evt| {
+                            evt.prevent_default();
+                            radial_pos.write().reset();
+                            input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                            },
                             for p in prims {
-                                span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                span { class: css_of_prim(p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                             }
                         }
                     }
