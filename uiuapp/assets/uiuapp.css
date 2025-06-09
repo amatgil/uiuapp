@@ -205,7 +205,8 @@ button:hover {
     left: 0;
     right: 0;
     bottom: 0;
-    background: conic-gradient(green 0% 25%, blue 25% 50%, yellow 50% 75%, purple 75% 100%);
+    /* background: conic-gradient(purple 0% 12.5%, green 12.5% 37.5%, blue 37.5% 62.5%, yellow 62.5% 87.5%, purple 87.5% 100%); */
+    background: conic-gradient(gray 0% 12.5%, white 12.5% 37.5%, gray 37.5% 62.5%, white 62.5% 87.5%, gray 87.5% 100%);
     border-radius: 50%;
     z-index: 1;
 }

@@ -36,12 +36,9 @@ fn App() -> Element {
         ]
     });
     // Has been input but not yet evaluated
-    let mut input_contents = use_signal(|| String::new());
-    //let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| None);
-    let mut touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None);
-
-    // TODO(release): depopulate
-    let mut radial_pos: Signal<RadialInfo> = use_signal(|| RadialInfo::new());
+    let mut input_contents = use_signal(String::new);
+    let touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None);
+    let rad_info: Signal<RadialInfo> = use_signal(RadialInfo::new);
 
     rsx! {
         Meta { charset: "UTF-8" }
@@ -87,7 +84,7 @@ fn App() -> Element {
                 }
             }
               div { class: "input-zone",
-                    RadialSelector { input_contents, radial_pos }
+                    RadialSelector { input_contents, rad_info }
                     div { class: "input-bar",
                     // This textarea should bring up the native keyboard for
                     // ascii-and-related typing
@@ -125,7 +122,7 @@ fn App() -> Element {
                           button { onclick: move |_| {input_contents.write().pop();}, "Bksp" }
                     }
                     div { class: "input-grid-buttons",
-                           ButtonIcons { input_contents, radial_pos }
+                           ButtonIcons { input_contents, rad_info }
                     }
               }
         }
@@ -133,13 +130,13 @@ fn App() -> Element {
 }
 
 #[component]
-fn RadialSelector(input_contents: Signal<String>, radial_pos: Signal<RadialInfo>) -> Element {
+fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
     rsx! {
-            if radial_pos.read().is_active {
+            if rad_info.read().is_active {
             div { class: "radial-selector",
-                  for (i, glyph) in radial_pos().glyphs.clone().into_iter().skip(1).enumerate() {
+                  for (i, glyph) in rad_info().glyphs.clone().into_iter().skip(1).enumerate() {
                       {
-                          let angle = i as f32 * radial_pos().glyphs.len() as f32 / 360.0;
+                          let angle = i as f32 * rad_info().glyphs.len() as f32 / 360.0;
                           let radius = 100;
                           match glyph {
                               E::Left(ref prims) => {
@@ -184,7 +181,7 @@ fn RadialSelector(input_contents: Signal<String>, radial_pos: Signal<RadialInfo>
 }
 
 #[component]
-fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<RadialInfo>) -> Element {
+fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
     rsx! {
         for button in button_icons.clone() {
             match button[0] {
@@ -193,14 +190,14 @@ fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<RadialInfo>) -
                     rsx! {
                         button { class: "uiua-char-input",
                             onpointerdown: move |evt| {
-                            radial_pos.write().start(evt.data.screen_coordinates());
+                            rad_info.write().start(evt.data.screen_coordinates());
                             },
                             onpointermove: move |evt| {
-                            radial_pos.write().update(evt.data.screen_coordinates());
+                            rad_info.write().update(evt.data.screen_coordinates());
                             },
                             onpointerup: move |evt| {
                             evt.prevent_default();
-                            radial_pos.write().reset();
+                            rad_info.write().reset();
                             input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
                             },
                             for p in prims {
