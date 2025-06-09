@@ -25,13 +25,13 @@ fn App() -> Element {
     // TODO(release): depopulate
     let mut buffer_contents = use_signal(|| {
         vec![
-            SBI::Input("+ 1 1".to_string()),
+            SBI::Input(highlight_code("+ 1 1")),
             SBI::Output("2".to_string()),
-            SBI::Input("˙⊞=⇡3".to_string()),
+            SBI::Input(highlight_code("˙⊞=⇡3")),
             SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
-            SBI::Input("˙⊞=⇡3".to_string()),
+            SBI::Input(highlight_code("˙⊞=⇡3")),
             SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
-            SBI::Input("˙⊞=⇡3".to_string()),
+            SBI::Input(highlight_code("˙⊞=⇡3")),
             SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
         ]
     });
@@ -62,19 +62,37 @@ fn App() -> Element {
               div { class: "code-zone",
                     div { class: "code-display-zone",
                           div { class: "code-scrollbackbuffer",
-                                for (i, item) in buffer_contents.read().iter().enumerate() {
+                                for item in buffer_contents.read().clone() {
                                     {
                                         match item {
-                                            SBI::Input(text) => {
-                                                let t = text.clone();
+                                            SBI::Input(input) => {
                                                 rsx! {
                                                     p { class: "user-input",
                                                     onclick: move |_e| {
                                                         if input_contents().is_empty() {
-                                                            *input_contents.write() = t.clone();
+                                                            // TODO: This recomputes the highlighting every frame, memoize it
+                                                            *input_contents.write() = match input {
+                                                                Ok(ref v) => v.iter().map(|uhs| uhs.to_string()).collect::<Vec<String>>().join(""),
+                                                                Err(ref s) => s.to_string()
+                                                            };
                                                         }
                                                     },
-                                                    "{text}" }
+                                                        match input {
+                                                            Ok(ref v) => {
+                                                                rsx! {
+                                                                    for uhs in v {
+                                                                        match uhs {
+                                                                            UiuappHistorySpan::UnstyledCode { text } => rsx! { span { "{text}" } },
+                                                                            UiuappHistorySpan::StyledCode { class: c, text } => rsx! { span { class: "{c}", "{text}"} },
+                                                                            UiuappHistorySpan::Whitspace(text) => rsx! { span { "{text}" } },
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                            Err(ref s) => rsx! { span { "{s}" } }
+                                                        }
+
+                                                    }
                                                 }
                                             },
                                             SBI::Output(text) => {
