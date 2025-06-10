@@ -121,8 +121,28 @@ button:hover {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-evenly; /* flex-end;*/
+    align-items: center;
     gap: 0.3rem;
 }
+.special-button {
+    /* TODO: Decide on whether buttons should have a border */
+    /*border: solid;
+    border-width: 2px;
+    border-color: #1e1e2e;
+    background-color: #313244;*/
+}
+
+
+/* TODO: Compute this '387' instead of eyeballing it */
+/* This selector fixes a styling issue where, on screen sizes aroudn 380px,
+   the special buttons form two non-equally filled rows (one of eight elements,
+   the other with one) */
+@media (max-width: 387px) { /* Example breakpoint */
+  .special-buttons .special-button {
+    flex-basis: 18vw;
+  }
+}
+
 
 .input-grid-buttons {
     display: grid;
@@ -179,6 +199,12 @@ button:hover {
 }
 .string-literal {
     color: #20f9fc;
+}
+.comment {
+    color: #888;
+}
+.strand {
+    color: #fff8;
 }
 .uiua-trans {
     background-image: linear-gradient(180deg, #5BCEFA 34%, #F5A9B8 34%, #F5A9B8 45%, #FFFFFF 45%, #FFFFFF 56%, #F5A9B8 56%, #F5A9B8 67%, #5BCEFA 67%);

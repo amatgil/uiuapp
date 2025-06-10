@@ -1,8 +1,28 @@
-use std::f32::consts::PI;
+pub mod highlighting;
+pub use highlighting::*;
+
+use std::{f32::consts::PI, fmt::Display};
 
 use lazy_static::lazy_static;
-use uiua::Primitive as P;
+use uiua::{
+    ast::Subscript,
+    format::{format_str, FormatConfig},
+    PrimClass, Primitive as P, SpanKind,
+};
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Either<L, R> {
+    Left(L),
+    Right(R),
+}
+use Either as E;
+
+/// An icon is either
+/// - (A vector of) Primitives
+/// - A string (and its associated html class)
+/// (Primitives do not store their class themselves, its computed based on their signature)
+///
+/// Primitives are stored as a vector to support multi-primitive icons, like `wrench` (subbyneg)
 pub type ButtonIcon = Either<Vec<P>, (&'static str, &'static str)>;
 
 pub const TAU: f32 = 2.0 * PI;
@@ -35,13 +55,6 @@ pub fn run_uiua(code: &str) -> Result<Vec<String>, String> {
         Err(e) => Err(e.to_string()),
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Either<L, R> {
-    Left(L),
-    Right(R),
-}
-use Either as E;
 
 pub fn css_of_prim(p: &P) -> &'static str {
     let special_cased = [
@@ -149,15 +162,12 @@ pub struct LastTouchContext {
 
 #[derive(Debug, Clone)]
 pub enum ScrollbackItem {
-    Input(String),
+    Input(Result<Vec<UiuappHistorySpan>, String>),
     Output(String),
 }
 
 use dioxus::{
-    html::geometry::{
-        euclid::{default, Point2D},
-        Coordinates, ScreenSpace,
-    },
+    html::geometry::{euclid::Point2D, ScreenSpace},
     prelude::*,
 };
 pub fn handle_running_code(
@@ -167,20 +177,19 @@ pub fn handle_running_code(
     use ScrollbackItem as SBI;
     match run_uiua(&input_contents()) {
         Ok(v) => {
-            // TODO: The pushed Input should be the formatted
-            // string instead of the input string
             buffer_contents
                 .write()
-                .push(SBI::Input(input_contents.read().clone()));
+                .push(SBI::Input(highlight_code(&input_contents.read().clone())));
+
             for s in v {
                 buffer_contents.write().push(SBI::Output(s));
             }
-            *input_contents.write() = String::new();
+            //*input_contents.write() = String::new(); // This was seen as undesirable
         }
         Err(s) => {
             buffer_contents
                 .write()
-                .push(SBI::Input(input_contents.read().clone()));
+                .push(SBI::Input(Err(input_contents.read().clone())));
             buffer_contents.write().push(SBI::Output(s));
             *input_contents.write() = String::new();
         }
@@ -195,6 +204,7 @@ fn l(p: P) -> Either<Vec<P>, (&'static str, &'static str)> {
 lazy_static! {
     /// The car of each line is the default icon. when pressed, the cdr is the radial menu icons
     /// See [this pad link](https://www.uiua.org/pad?src=0_17_0-dev_1__SWQgICAgIOKGkCBtYXBA4oiY4pahIsuZy5zil4wuOiIKU3RhY2sgIOKGkCBtYXBA4oqD4pahIuKIqeKKk-KKmeKLheKfnOKKuOKkmeKkmuKXoSIKSW52ICAgIOKGkCBtYXBAwrDilqEi4oyd4o2c4oyFIgpJdGVyICAg4oaQIG1hcEAv4pahIuKIp1xc4o2l4o2j4o2p4o2i4o2kIgpTdWIgICAg4oaQIG1hcEDiiaHilqEi4oqe4qeF4qeI4oqV4oqcIgpNQXIgICAg4oaQIG1hcEDCr-KWoSLCscKs4oy14oia4oi_4oyK4oyI4oGFIgpNU3QgICAg4oaQIG1hcEDip7vilqEi4paz4oqi4oqj4oeM4pmtwqTijYkiCk1WbCAgICDihpAgbWFwQOKHoeKWoSLii6_iiprii5UiCk1DbXAgICDihpAgbWFwQOKNhuKWoSLijY_ijZbiipvil7Til7AiCkJveCAgICDihpAgbWFwQOKWoeKWoSLil4fijZoiCkRBciAgICDihpAgbWFwQCvilqEiLcOXw7fil7_igb_igpniiKDihILiiqUiCkRTdCAgICDihpAgbWFwQOKKn-KWoSLiioLiio_iiqHihq_ihpnihpjihrvilr0iCkNvbXAgICDihpAgbWFwQD3ilqEi4omgPOKJpD7iiaXihqfihqUiCkRDbXAgICDihpAgbWFwQOKJjeKWoSLijJXiprfiiIriipciCkNvbnN0ICDihpAgbWFwQOKaguKWoSLOt8-Az4TiiJ4iCk51bXMgICDihpAgbWFwQDDilqEiMTIzNDU2Nzg5IgpTdWJzICAg4oaQIG1hcEDigoDilqEi4oKB4oKC4oKD4oKE4oKF4oKG4oKH4oKI4oKJIgpFeHAgICAg4oaQIG1hcEB44pahIuKIqOKnhuKni_CdhJDil6DiqZziiILiiKsiCklkaW9tcyDihpAgIi3iirjCrCIKWwogIHtJZCBTdGFjayBJbnYgSXRlciBTdWJ9CiAge01BciBNU3QgTVZsIE1DbXAgQm94fQogIHtEQXIgRFN0IENvbXAgRENtcCBDb25zdH0KICB7IkVtcHR5IiBOdW1zIFN1YnMgRXhwIElkaW9tc30KXQo=) for the origin
+    /// See [ButtonIcon]'s documentation for an explanation
     pub static ref button_icons: [Vec<ButtonIcon>; 4 * 5] = [
         // ====== ROW ONE ======
         // Id
@@ -239,7 +249,7 @@ lazy_static! {
             l(P::Group)
         ],
 
-        // ====== ROW ONE ======
+        // ====== ROW TWO ======
 
         // MAr
         vec![
@@ -344,7 +354,7 @@ lazy_static! {
         // Exp
         vec![E::Right((EXPERIMENTAL_ICON, ""))], // TODO: Should/Must be autopopulated
         // Idioms
-        vec![E::Left(vec![P::Sub, P::By, P::Neg])],
+        vec![E::Left(vec![P::Sub, P::By, P::Not])],
     ];
 }
 
