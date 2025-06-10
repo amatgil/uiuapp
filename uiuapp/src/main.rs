@@ -70,9 +70,13 @@ fn App() -> Element {
                                                     p { class: "user-input",
                                                     onclick: move |_e| {
                                                         if input_contents().is_empty() {
-                                                            // TODO: This recomputes the highlighting every frame, memoize it
                                                             *input_contents.write() = match input {
-                                                                Ok(ref v) => v.iter().map(|uhs| uhs.to_string()).collect::<Vec<String>>().join(""),
+                                                                Ok(ref v) => v.iter().map(|uhs| match uhs {
+                                                                    // Bunch of cloning, this should be benchmarked
+                                                                    UiuappHistorySpan::UnstyledCode { text } => text.clone(),
+                                                                    UiuappHistorySpan::StyledCode { text, .. } => text.clone(),
+                                                                    UiuappHistorySpan::Whitspace(text) => text.clone(),
+                                                                }).collect::<Vec<String>>().join(""),
                                                                 Err(ref s) => s.to_string()
                                                             };
                                                         }
@@ -140,16 +144,15 @@ fn App() -> Element {
               }
               div { class: "input-zone",
                     div { class: "special-buttons",
-                          button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
-                          button { onclick: move |_| {
-                              *buffer_contents.write() = vec![];
-                          }, "Clear" }
-                          button { onclick: move |_| {input_contents.write().push(';');}, ";" }
-                          button { "←" } // TODO: position cursor
-                          button { "↓" }
-                          button { "↑" }
-                          button { "→" }
-                          button { onclick: move |_| {input_contents.write().pop();}, "Bksp" }
+                          button { class: "special-button", onclick: move |_| {input_contents.write().push('\n');}, "Ret" }
+                          button { class: "special-button", onclick: move |_| {*buffer_contents.write() = vec![];}, "Clear Past" }
+                          button { class: "special-button", onclick: move |_| {*input_contents.write() = "".to_string();}, "Clear Curr" }
+                          button { class: "special-button", onclick: move |_| {input_contents.write().push(';');}, ";" }
+                          button { class: "special-button", "←" } // TODO: position cursor
+                          button { class: "special-button", "↓" }
+                          button { class: "special-button", "↑" }
+                          button { class: "special-button", "→" }
+                          button { class: "special-button", onclick: move |_| {input_contents.write().pop();}, "Bksp" }
                     }
                     div { class: "input-grid-buttons",
                            ButtonIcons { input_contents, radial_pos }
