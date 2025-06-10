@@ -87,7 +87,11 @@ impl RadialInfo {
         }
     }
 
-    pub fn start(&mut self, coord: Point2D<f64, ScreenSpace>, glyphs: Vec<Either<Vec<P>, (&'static str, &'static str)>>) {
+    pub fn start(
+        &mut self,
+        coord: Point2D<f64, ScreenSpace>,
+        glyphs: Vec<Either<Vec<P>, (&'static str, &'static str)>>,
+    ) {
         self.starting_position = coord;
         self.current_position = coord;
         self.glyphs = glyphs;
@@ -95,15 +99,15 @@ impl RadialInfo {
 
     pub fn update(&mut self, coord: Point2D<f64, ScreenSpace>) {
         self.current_position = coord;
-        let frac = 360. / (self.glyphs.len() - 1) as f64;
-        let angle = self
-            .starting_position
-            .to_vector()
-            .angle_to(self.current_position.to_vector())
-            .to_degrees();
-        dbg!(frac);
-        dbg!(angle);
-        dbg!(angle % frac);
+        // let frac = 360. / (self.glyphs.len() - 1) as f64;
+        // let angle = self
+        //     .starting_position
+        //     .to_vector()
+        //     .angle_to(self.current_position.to_vector())
+        //     .to_degrees();
+        // dbg!(frac);
+        // dbg!(angle);
+        // dbg!(angle % frac);
         if !self.is_active && self.should_activate() {
             self.is_active = true;
         }
@@ -125,6 +129,7 @@ impl RadialInfo {
         let mut gray = true;
         while count < 100. {
             let color = if gray { "gray" } else { "white" };
+            let radius = 60.;
             let upper = count + incr;
             initial.push_str(format!("{} {count}% {upper}%,", color).as_str());
             count = upper;
