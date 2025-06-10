@@ -131,46 +131,43 @@ fn App() -> Element {
 
 #[component]
 fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
+    let glyphs = rad_info().glyphs.clone().into_iter().skip(1).enumerate();
     rsx! {
             if rad_info.read().is_active {
             div { class: "radial-selector",
-                  for (i, glyph) in rad_info().glyphs.clone().into_iter().skip(1).enumerate() {
+                for (i, p) in glyphs {
                       {
-                          let angle = i as f32 * rad_info().glyphs.len() as f32 / 360.0;
-                          let radius = 100;
-                          match glyph {
-                              E::Left(ref prims) => {
-                                  let primes = prims.clone();
+                        // THIS NEEDS TO BE CALCULATED
+                          let radius = 60;
+                            let primes = rad_info().glyphs.clone();
+                                let angle = (i as f32) * 360.0 / (rad_info().glyphs.len() - 1) as f32;
                                   rsx! {
                                       button { class: "uiua-char-input uiua-radial-char-input",
-                                          // style: "transform: rotate({angle}deg) translate({radius}px) rotate(-{angle}deg)",
+                                          style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-{radius}px) rotate(-{angle}deg);",
                                           onclick: move |evt| {
                                               evt.prevent_default();
                                               input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
                                           },
-                                          for p in prims {
-                                              span { class: css_of_prim(p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                                          }
+                                        span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                                       }
                                   }
-                              },
 
-                              E::Right((s, c)) => {
-                                  rsx! {
-                                      button {
-                                          onclick: move |e| {
-                                              e.prevent_default();
-                                              if s != EXPERIMENTAL_ICON {
-                                                  input_contents.write().push_str(s);
-                                              }
-                                          },
-                                          class: "{c}", "{s}"
-                                      }
-                                  }
-                              }
-                          }
+
+                                  // rsx! {
+                                  //     button {
+                                  //         class: "{c}",
+                                  //         style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-{radius}px) rotate(-{angle}deg);",
+                                  //         onclick: move |e| {
+                                  //             e.prevent_default();
+                                  //             if s != EXPERIMENTAL_ICON {
+                                  //                 input_contents.write().push_str(s);
+                                  //             }
+                                  //         },
+                                  //         "{s}"
+                                  //     }
+                                  // }
                       }
-                  }
+                }
             }
         } else {
             div { class: "radial-selector",
@@ -184,13 +181,14 @@ fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) 
 fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
     rsx! {
         for button in button_icons.clone() {
-            match button[0] {
-                E::Left(ref prims) => {
+            match button {
+                E::Left(prims) => {
                     let primes = prims.clone();
+                    let primes2 = prims.clone();
                     rsx! {
                         button { class: "uiua-char-input",
                             onpointerdown: move |evt| {
-                            rad_info.write().start(evt.data.screen_coordinates());
+                            rad_info.write().start(evt.data.screen_coordinates(), primes.clone());
                             },
                             onpointermove: move |evt| {
                             rad_info.write().update(evt.data.screen_coordinates());
@@ -198,11 +196,9 @@ fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> 
                             onpointerup: move |evt| {
                             evt.prevent_default();
                             rad_info.write().reset();
-                            input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                            input_contents.write().push_str(&primes2.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
                             },
-                            for p in prims {
-                                span { class: css_of_prim(p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                            }
+                                span { class: css_of_prim(&prims[0]), "{&prims[0].glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                         }
                     }
                 },
