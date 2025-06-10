@@ -209,9 +209,9 @@ fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> 
         for button in button_icons.clone() {
             match button[0] {
                 E::Left(ref prims) => {
-                    let primes = prims.clone();
-                    let primes2 = prims.clone();
+                    let primsP = prims.clone();
                     let btn = button.clone();
+                    let display_text: String = prims.iter().map(|p| p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>();
                     rsx! {
                         button { class: "uiua-char-input",
                                  onpointerdown: move |evt| {
@@ -223,9 +223,9 @@ fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> 
                                  onpointerup: move |evt| {
                                      evt.prevent_default();
                                      rad_info.write().reset();
-                                     input_contents.write().push_str(&primes2.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                     input_contents.write().push_str(&primsP.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
                                  },
-                                 span { class: css_of_prim(&prims[0]), "{&prims[0].glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                 span { class: css_of_prim(&prims[0]), "{display_text}" }
                         }
                     }
                 },
