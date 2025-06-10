@@ -100,10 +100,12 @@ button:hover {
     flex-wrap: wrap;
     justify-content: space-evenly; /* flex-end;*/
     gap: 0.3rem;
-    align-content: space-evenly;
+    /* TODO: When the screen width is too low (around 380px), special buttons
+     wrap in a very ugly way (eight elements in the first row, one in the second)
+     This should definitely be fixed... somehow */
 }
 .special-button {
-    /* TODO: Decide on this */
+    /* TODO: Decide on whether buttons should have a border */
     /*border: solid;
     border-width: 2px;
     border-color: #1e1e2e;
