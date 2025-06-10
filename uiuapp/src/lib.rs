@@ -285,7 +285,7 @@ lazy_static! {
         // Exp
         vec![E::Right((EXPERIMENTAL_ICON, ""))], // TODO: Should/Must be autopopulated
         // Idioms
-        vec![E::Left(vec![P::Sub, P::By, P::Neg])],
+        vec![E::Left(vec![P::Sub, P::By, P::Not])],
     ];
 }
 
