@@ -36,69 +36,59 @@ fn App() -> Element {
         ]
     });
     // Has been input but not yet evaluated
-    let mut input_contents = use_signal(|| String::new());
-    //let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| None);
-    let mut touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None);
-
-    // TODO(release): depopulate
-    let mut radial_pos: Signal<Option<RadialInfo>> = use_signal(|| {
-        None
-        //Some(RadialInfo {
-        //    last_pos: (300, 200),
-        //    glyphs: button_icons[0].clone(),
-        //})
-    });
+    let mut input_contents = use_signal(String::new);
+    let touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None);
+    let rad_info: Signal<RadialInfo> = use_signal(RadialInfo::new);
 
     rsx! {
         Meta { charset: "UTF-8" }
         Meta {
-            content: "width=device-width, initial-scale=1.0",
+            content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
             name: "viewport",
         }
         Title { "cas/uiuapp" }
         Stylesheet { href: CSS }
 
-        div { class: "wrapper",
-              div { class: "code-zone",
-                    div { class: "code-display-zone",
-                          div { class: "code-scrollbackbuffer",
-                                for (i, item) in buffer_contents.read().iter().enumerate() {
-                                    {
-                                        match item {
-                                            SBI::Input(text) => {
-                                                let t = text.clone();
-                                                rsx! {
-                                                    p { class: "user-input",
-                                                    onclick: move |_e| {
-                                                        if input_contents().is_empty() {
-                                                            *input_contents.write() = t.clone();
-                                                        }
-                                                    },
-                                                    "{text}" }
-                                                }
-                                            },
-                                            SBI::Output(text) => {
-                                                rsx! {
-                                                    p { class: "user-result", "{text}" }
-                                                }
-                                            }
+        div { class: "app",
+            div { class: "top-bar",
+                button {
+                    onclick: move |e| {
+                        info!("Settings button pressed (unimplemented as of yet)");
+                    },
+                    "Settings"
+                }
+            }
+            div { class: "code-view-zone",
+                for (i, item) in buffer_contents.read().iter().enumerate() {
+                    {
+                        match item {
+                            SBI::Input(text) => {
+                                let t = text.clone();
+                                rsx! {
+                                    p { class: "user-input",
+                                    onclick: move |_e| {
+                                        if input_contents().is_empty() {
+                                            *input_contents.write() = t.clone();
                                         }
-                                    }
+                                    },
+                                    "{text}" }
                                 }
-                          }
-                          div { class: "code-buttons",
-                              button {
-                                  onclick: move |e| {
-                                      info!("Settings button pressed (unimplemented as of yet)");
-                                  },
-                                  "Settings"
-                              }
-                          }
+                            },
+                            SBI::Output(text) => {
+                                rsx! {
+                                    p { class: "user-result", "{text}" }
+                                }
+                            }
+                        }
                     }
-                    div { class: "code-textarea-zone",
+                }
+            }
+              div { class: "input-zone",
+                    RadialSelector { input_contents, rad_info }
+                    div { class: "input-bar",
                     // This textarea should bring up the native keyboard for
                     // ascii-and-related typing
-                          textarea { class: "uiua-input", rows: 2,
+                          textarea { class: "text-box", rows: 1,
                                      onkeydown: move |e| {
                                          if let Key::Enter = e.key() {
                                              info!("Return gotten");
@@ -119,8 +109,6 @@ fn App() -> Element {
                                    },
                                    "Run" },
                     }
-              }
-              div { class: "input-zone",
                     div { class: "special-buttons",
                           button { onclick: move |_| {input_contents.write().push('\n');}, "Return" }
                           button { onclick: move |_| {
@@ -134,44 +122,39 @@ fn App() -> Element {
                           button { onclick: move |_| {input_contents.write().pop();}, "Bksp" }
                     }
                     div { class: "input-grid-buttons",
-                           ButtonIcons { input_contents, radial_pos }
+                           ButtonIcons { input_contents, rad_info }
                     }
               }
         }
-        RadialSelector { input_contents, radial_pos }
     }
 }
 
 #[component]
-fn RadialSelector(
-    input_contents: Signal<String>,
-    radial_pos: Signal<Option<RadialInfo>>,
-) -> Element {
+fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
+    let glyphs = rad_info().glyphs;
     rsx! {
-        if let Some(RadialInfo { last_pos: (y, x), glyphs }) = radial_pos() {
+            if rad_info.read().is_active {
             div { class: "radial-selector",
-                  style: "display: inline-block; position: absolute; top: {y}px; left: {x}px;"
-            }
-            for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
-                let angle = i as f32 * TAU / (glyphs.len()-1) as f32;
-                info!("({y},{x})");
+                for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
+                let angle = (i as f32) * 360. / (glyphs.len()-1) as f32;
+                //TODO: make computed
+                let radius = 60.;
                 match glyph {
                     E::Left(ref prims) => {
                         let primes = prims.clone();
-                        rsx! {
-                            button { class: "uiua-char-input uiua-radial-char-input",
-                                     position: "absolute",
-                                     top: "calc({y}px + 100vw/5/2 + (100vw/5 - 30px)*sin({angle}) + 30px/2)",
-                                     left: "calc({x}px + 100vw/5/2 + (100vw/5 - 30px)*cos({angle}) + 30px/2)",  // 30px is the border of the radial-select
-                                     onclick: move |evt| {
-                                         evt.prevent_default();
-                                         input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
-                                     },
-                                     for p in prims {
-                                         span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                                     }
-                            }
-                        }
+                                  rsx! {
+                                      button { class: "uiua-char-input uiua-radial-char-input",
+                                          style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-{radius}px) rotate(-{angle}deg);",
+                                          onclick: move |evt| {
+                                              evt.prevent_default();
+                                              input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                          },
+                                      for p in prims {
+                                        span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                      }
+                                      }
+                              }
+
                     },
 
                     E::Right((s, c)) => {
@@ -190,6 +173,7 @@ fn RadialSelector(
                 }
             }
             }
+            }
         } else {
             div { class: "radial-selector",
                   style: "display:none;"
@@ -199,21 +183,28 @@ fn RadialSelector(
 }
 
 #[component]
-fn ButtonIcons(input_contents: Signal<String>, radial_pos: Signal<Option<RadialInfo>>) -> Element {
+fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
     rsx! {
         for button in button_icons.clone() {
             match button[0] {
                 E::Left(ref prims) => {
                     let primes = prims.clone();
+                    let primes2 = prims.clone();
+                    let btn = button.clone();
                     rsx! {
                         button { class: "uiua-char-input",
-                                 onclick: move |evt| {
-                                     evt.prevent_default();
-                                     input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
-                                 },
-                            for p in prims {
-                                span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                            }
+                            onpointerdown: move |evt| {
+                            rad_info.write().start(evt.data.screen_coordinates(), btn.clone());
+                            },
+                            onpointermove: move |evt| {
+                            rad_info.write().update(evt.data.screen_coordinates());
+                            },
+                            onpointerup: move |evt| {
+                            evt.prevent_default();
+                            rad_info.write().reset();
+                            input_contents.write().push_str(&primes2.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                            },
+                                span { class: css_of_prim(&prims[0]), "{&prims[0].glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                         }
                     }
                 },
