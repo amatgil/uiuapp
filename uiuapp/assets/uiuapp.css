@@ -99,10 +99,8 @@ button:hover {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-evenly; /* flex-end;*/
+    align-items: center;
     gap: 0.3rem;
-    /* TODO: When the screen width is too low (around 380px), special buttons
-     wrap in a very ugly way (eight elements in the first row, one in the second)
-     This should definitely be fixed... somehow */
 }
 .special-button {
     /* TODO: Decide on whether buttons should have a border */
@@ -111,6 +109,18 @@ button:hover {
     border-color: #1e1e2e;
     background-color: #313244;*/
 }
+
+
+/* TODO: Compute this '387' instead of eyeballing it */
+/* This selector fixes a styling issue where, on screen sizes aroudn 380px,
+   the special buttons form two non-equally filled rows (one of eight elements,
+   the other with one) */
+@media (max-width: 387px) { /* Example breakpoint */
+  .special-buttons .special-button {
+    flex-basis: 18vw;
+  }
+}
+
 
 .input-grid-buttons {
     display: grid;
