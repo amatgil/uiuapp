@@ -167,10 +167,7 @@ pub enum ScrollbackItem {
 }
 
 use dioxus::{
-    html::geometry::{
-        euclid::{default, Point2D},
-        Coordinates, ScreenSpace,
-    },
+    html::geometry::{euclid::Point2D, ScreenSpace},
     prelude::*,
 };
 pub fn handle_running_code(
@@ -252,7 +249,7 @@ lazy_static! {
             l(P::Group)
         ],
 
-        // ====== ROW ONE ======
+        // ====== ROW TWO ======
 
         // MAr
         vec![
