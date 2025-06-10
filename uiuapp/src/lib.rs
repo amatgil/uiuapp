@@ -16,6 +16,7 @@ pub const TAU: f32 = 2.0 * PI;
 pub const MAX_OUTPUT_CHARS: usize = 1000;
 pub const UNKNOWN_GLYPH: char = '¡';
 pub const EXPERIMENTAL_ICON: &str = "🧪";
+const DEADZONE_RADIUS: f64 = 30.;
 
 pub fn run_uiua(code: &str) -> Result<Vec<String>, String> {
     let mut runtime = uiua::Uiua::with_safe_sys();
@@ -49,10 +50,102 @@ pub enum Either<L, R> {
 }
 use Either as E;
 
-#[derive(Debug, Clone)]
+pub fn css_of_prim(p: &P) -> &'static str {
+    let special_cased = [
+        (P::Transpose, "uiua-trans"),
+        (P::Identity, "stack-function"),
+    ];
+    if let Some((_, s)) = special_cased.iter().find(|l| l.0 == *p) {
+        s
+    } else if let Some(args) = p.args() {
+        match args {
+            0 => "noadic-function",
+            1 => "monadic-function",
+            2 => "dyadic-function",
+            _ => "",
+        }
+    } else if let Some(args) = p.modifier_args() {
+        match args {
+            1 => "monadic-modifier",
+            2 => "dyadic-modifier",
+            _ => "",
+        }
+    } else {
+        ""
+    }
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct RadialInfo {
-    pub last_pos: (usize, usize),
-    pub glyphs: Vec<ButtonIcon>,
+    pub is_active: bool,
+    pub current_selection: usize,
+    pub starting_position: Point2D<f64, ScreenSpace>,
+    pub current_position: Point2D<f64, ScreenSpace>,
+    pub glyphs: Vec<Either<Vec<P>, (&'static str, &'static str)>>,
+    pub style: String,
+}
+
+impl RadialInfo {
+    pub fn new() -> Self {
+        Self {
+            // to do: delete this
+            style: "background: none".to_string(),
+            ..Default::default()
+        }
+    }
+
+    pub fn start(
+        &mut self,
+        coord: Point2D<f64, ScreenSpace>,
+        glyphs: Vec<Either<Vec<P>, (&'static str, &'static str)>>,
+    ) {
+        self.starting_position = coord;
+        self.current_position = coord;
+        self.glyphs = glyphs;
+    }
+
+    pub fn update(&mut self, coord: Point2D<f64, ScreenSpace>) {
+        self.current_position = coord;
+        // let frac = 360. / (self.glyphs.len() - 1) as f64;
+        // let angle = self
+        //     .starting_position
+        //     .to_vector()
+        //     .angle_to(self.current_position.to_vector())
+        //     .to_degrees();
+        // dbg!(frac);
+        // dbg!(angle);
+        // dbg!(angle % frac);
+        if !self.is_active && self.should_activate() {
+            self.is_active = true;
+        }
+    }
+    pub fn should_activate(&self) -> bool {
+        self.starting_position.distance_to(self.current_position) > DEADZONE_RADIUS
+    }
+    pub fn reset(&mut self) {
+        self.is_active = false;
+        self.glyphs.clear();
+        self.starting_position = Point2D::default();
+        self.current_position = Point2D::default();
+    }
+    pub fn _compute_radial(&mut self) {
+        let len = self.glyphs.len();
+        let mut initial = String::from("background: conic-gradient(");
+        let incr = if len > 0 { 100. / len as f64 } else { 100. };
+        let mut count = 0.;
+        let mut gray = true;
+        while count < 100. {
+            let color = if gray { "gray" } else { "white" };
+            let radius = 60.;
+            let upper = count + incr;
+            initial.push_str(format!("{} {count}% {upper}%,", color).as_str());
+            count = upper;
+            gray = !gray;
+        }
+        initial.push_str(");");
+        dbg!(&initial);
+        self.style = initial;
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -67,7 +160,13 @@ pub enum ScrollbackItem {
     Output(String),
 }
 
-use dioxus::prelude::*;
+use dioxus::{
+    html::geometry::{
+        euclid::{default, Point2D},
+        Coordinates, ScreenSpace,
+    },
+    prelude::*,
+};
 pub fn handle_running_code(
     mut input_contents: Signal<String>,
     mut buffer_contents: Signal<Vec<ScrollbackItem>>,
