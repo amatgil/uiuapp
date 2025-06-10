@@ -211,7 +211,6 @@ fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> 
                 E::Left(ref prims) => {
                     let primsP = prims.clone();
                     let btn = button.clone();
-                    let display_text: String = prims.iter().map(|p| p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>();
                     rsx! {
                         button { class: "uiua-char-input",
                                  onpointerdown: move |evt| {
