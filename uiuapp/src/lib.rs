@@ -117,7 +117,7 @@ impl RadialInfo {
         self.starting_position = Point2D::default();
         self.current_position = Point2D::default();
     }
-    pub fn compute_radial(&mut self) {
+    pub fn _compute_radial(&mut self) {
         let len = self.glyphs.len();
         let mut initial = String::from("background: conic-gradient(");
         let incr = if len > 0 { 100. / len as f64 } else { 100. };
