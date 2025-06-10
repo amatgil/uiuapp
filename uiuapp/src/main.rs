@@ -225,7 +225,9 @@ fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> 
                                      rad_info.write().reset();
                                      input_contents.write().push_str(&primsP.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
                                  },
-                                 span { class: css_of_prim(&prims[0]), "{display_text}" }
+                                for p in prims {
+                                    span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                }
                         }
                     }
                 },
