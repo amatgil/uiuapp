@@ -54,12 +54,12 @@ pub enum ScrollbackOutput {
 #[derive(Debug, Clone)]
 pub struct Settings {
     pub clean_input_on_run: bool,
-    pub execution_limit: Duration,         // TODO: make it do something
-    pub audio_sample_time: u32,            // TODO: make it do something
-    pub autoplay_video: bool,              // TODO: make it do something
-    pub autoplay_audio: bool,              // TODO: make it do something
-    pub gayness: (),                       // TODO: make it do something
-    pub stack_ordering: StackOrdering,     // TODO: make it do something
+    pub execution_limit: Duration, // TODO: make it do something
+    pub audio_sample_time: u32,    // TODO: make it do something
+    pub autoplay_video: bool,      // TODO: make it do something
+    pub autoplay_audio: bool,      // TODO: make it do something
+    pub gayness: (),               // TODO: make it do something
+    pub stack_ordering: StackOrdering,
     pub font_size: f32,                    // TODO: make it do something
     pub stack_preserved_across_runs: bool, // TODO: make it do something
 }
