@@ -147,19 +147,3 @@ fn html_class_of_prim_sub(prim: Option<P>, sub: Option<Subscript>) -> Option<&'s
     prim.map(|prim| html_class_of_prim(prim, args))
         .unwrap_or_default()
 }
-
-impl Display for UiuappHistorySpan {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                UiuappHistorySpan::UnstyledCode { text } => text.clone(),
-                UiuappHistorySpan::StyledCode { class, text } => {
-                    format!("<span class={class}>{text}</span>")
-                }
-                UiuappHistorySpan::Whitspace(text) => text.clone(),
-            }
-        )
-    }
-}
