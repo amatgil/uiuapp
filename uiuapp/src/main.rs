@@ -20,30 +20,15 @@ fn App() -> Element {
     static CSS: Asset = asset!("/assets/uiuapp.css");
     static _UIUA386: Asset = asset!("/assets/Uiua386.ttf");
 
-    // the text that's been input and evaluated
-    // populated for testing
-    // TODO(release): depopulate
-    let mut buffer_contents = use_signal(|| {
-        let code = "˙⊞=⇡3";
-        let output = SBI::Output(vec![run_uiua(code).unwrap()[0].clone()]);
-        let c = SBI::Input(highlight_code(code));
-
-        vec![
-            SBI::Input(highlight_code("+ 1 1")),
-            SBI::Output(vec![ScrollbackOutput::Text("2".to_string())]),
-            c.clone(),
-            output.clone(),
-            c.clone(),
-            output.clone(),
-            c.clone(),
-            output.clone(),
-        ]
-    });
     // Has been input but not yet evaluated
     let mut input_contents = use_signal(String::new);
     let touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None);
     let rad_info: Signal<RadialInfo> = use_signal(RadialInfo::new);
     let mut settings: Signal<Settings> = use_signal(Settings::default);
+    // the text that's been input and evaluated
+    // populated for testing
+    // TODO(release): depopulate
+    let mut buffer_contents = use_signal(Vec::new);
 
     rsx! {
         Meta { charset: "UTF-8" }
@@ -114,7 +99,6 @@ fn App() -> Element {
                                     for output in outputs {
                                         match output {
                                             ScrollbackOutput::Text(text) => {
-                                                info!("TEXT");
                                                 rsx! {
                                                     p { class: "user-result", "{text}" }
                                                 }

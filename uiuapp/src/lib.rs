@@ -13,7 +13,7 @@ use std::{f32::consts::PI, time::Duration};
 use uiua::{
     ast::Subscript,
     format::{format_str, FormatConfig},
-    PrimClass, Primitive as P, SpanKind,
+    PrimClass, Primitive as P, SafeSys, SpanKind, SysBackend,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -51,7 +51,6 @@ pub enum ScrollbackOutput {
     Audio(Vec<u8>),
 }
 
-#[derive(Debug, Clone)]
 pub struct Settings {
     pub clean_input_on_run: bool,
     pub execution_limit: Duration,   // TODO: make it do something
@@ -60,6 +59,7 @@ pub struct Settings {
     pub stack_ordering: StackOrdering,
     pub font_size: f32,                    // TODO: make it do something
     pub stack_preserved_across_runs: bool, // TODO: make it do something
+    pub runtime: uiua::Uiua,
 }
 #[derive(Debug, Clone, Default)]
 pub enum StackOrdering {
@@ -78,18 +78,29 @@ impl Default for Settings {
             stack_ordering: StackOrdering::default(),
             font_size: 100.0,
             stack_preserved_across_runs: true,
+            runtime: uiua::Uiua::with_safe_sys(),
         }
     }
 }
 
-pub fn run_uiua(code: &str) -> Result<Vec<ScrollbackOutput>, String> {
-    let mut runtime = uiua::Uiua::with_safe_sys();
+pub fn run_uiua(
+    code: &str,
+    mut settings: Signal<Settings>,
+) -> Result<Vec<ScrollbackOutput>, String> {
+    let stack_preserved_across_runs = settings.read().stack_preserved_across_runs;
+    let runtime = &mut settings.write().runtime;
     match runtime.run_str(code) {
-        Ok(_compiler) => Ok(runtime
-            .take_stack()
-            .into_iter()
-            .map(|v| ScrollbackOutput::from_uiuavalue(v, ()))
-            .collect()),
+        Ok(_compiler) => {
+            let stack = if stack_preserved_across_runs {
+                runtime.stack().to_vec()
+            } else {
+                runtime.take_stack()
+            };
+            Ok(stack
+                .into_iter()
+                .map(|v| ScrollbackOutput::from_uiuavalue(v))
+                .collect())
+        }
         Err(e) => Err(e.to_string()),
     }
 }
@@ -103,7 +114,7 @@ pub fn handle_running_code(
     buffer_contents
         .write()
         .push(SBI::Input(highlight_code(&input_contents.read().clone())));
-    match run_uiua(&input_contents()) {
+    match run_uiua(&input_contents(), settings) {
         Ok(sbo) => {
             let s = sbo
                 .into_iter()
@@ -129,7 +140,6 @@ pub fn handle_running_code(
             buffer_contents
                 .write()
                 .push(SBI::Output(vec![ScrollbackOutput::Text(s)]));
-            *input_contents.write() = String::new();
         }
     }
 }
