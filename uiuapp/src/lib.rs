@@ -9,7 +9,7 @@ use dioxus::{
     prelude::*,
 };
 use lazy_static::lazy_static;
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Duration};
 use uiua::{
     ast::Subscript,
     format::{format_str, FormatConfig},
@@ -52,7 +52,39 @@ pub enum ScrollbackOutput {
 }
 
 #[derive(Debug, Clone)]
-pub struct Settings {}
+pub struct Settings {
+    pub clean_input_on_run: bool,
+    pub execution_limit: Duration,
+    pub audio_sample_time: u32,
+    pub autoplay_video: bool,
+    pub autoplay_audio: bool,
+    pub gayness: (), // TODO
+    pub stack_ordering: StackOrdering,
+    pub font_size: f32,
+    pub stack_preserved_across_runs: bool,
+}
+#[derive(Debug, Clone, Default)]
+pub enum StackOrdering {
+    #[default]
+    BottomAtTop,
+    TopAtTop,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            clean_input_on_run: false,
+            execution_limit: Duration::from_secs(5),
+            audio_sample_time: 44100,
+            autoplay_video: false,
+            autoplay_audio: false,
+            gayness: (),
+            stack_ordering: StackOrdering::default(),
+            font_size: 100.0,                  // TODO: implement
+            stack_preserved_across_runs: true, // TODO: implement
+        }
+    }
+}
 
 pub fn run_uiua(code: &str) -> Result<Vec<ScrollbackOutput>, String> {
     let mut runtime = uiua::Uiua::with_safe_sys();
@@ -69,6 +101,7 @@ pub fn run_uiua(code: &str) -> Result<Vec<ScrollbackOutput>, String> {
 pub fn handle_running_code(
     mut input_contents: Signal<String>,
     mut buffer_contents: Signal<Vec<ScrollbackItem>>,
+    settings: Signal<Settings>,
 ) {
     use ScrollbackItem as SBI;
     buffer_contents
@@ -95,7 +128,9 @@ pub fn handle_running_code(
                     buffer_contents.write().push(SBI::Output(s));
                 }
             }
-            //*input_contents.write() = String::new(); // This was seen as undesirable, TODO: add as Setting option
+            if settings.read().clean_input_on_run {
+                *input_contents.write() = String::new();
+            }
         }
         Err(s) => {
             buffer_contents

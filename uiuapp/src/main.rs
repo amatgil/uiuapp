@@ -27,6 +27,7 @@ fn App() -> Element {
         let code = "˙⊞=⇡3";
         let output = SBI::Output(run_uiua(code).unwrap()[0].clone());
         let c = SBI::Input(highlight_code(code));
+
         vec![
             SBI::Input(highlight_code("+ 1 1")),
             SBI::Output(ScrollbackOutput::Text("2".to_string())),
@@ -42,6 +43,7 @@ fn App() -> Element {
     let mut input_contents = use_signal(String::new);
     let touch_info: Signal<Option<LastTouchContext>> = use_signal(|| None);
     let rad_info: Signal<RadialInfo> = use_signal(RadialInfo::new);
+    let mut settings: Signal<Settings> = use_signal(Settings::default);
 
     rsx! {
             Meta { charset: "UTF-8" }
@@ -57,6 +59,10 @@ fn App() -> Element {
                     button {
                         onclick: move |e| {
                             info!("Settings button pressed (unimplemented as of yet)");
+                            // Settings button toggles this specific one, for testing
+                            // TODO: implement an actual settings menu
+                            let b = settings.read().clean_input_on_run;
+                            settings.write().clean_input_on_run = !b;
                         },
                         "Settings"
                     }
@@ -140,7 +146,7 @@ fn App() -> Element {
                                                  if e.modifiers().contains(Modifiers::CONTROL) {
                                                      e.prevent_default();
                                                      info!("Running from shortcut");
-                                                     handle_running_code(input_contents, buffer_contents);
+                                                     handle_running_code(input_contents, buffer_contents, settings);
                                                  }
                                              }
                                          },
@@ -150,7 +156,7 @@ fn App() -> Element {
                                          value: input_contents }
                               button { class: "run-button",
                                        onclick: move |e| {
-                                           handle_running_code(input_contents, buffer_contents);
+                                           handle_running_code(input_contents, buffer_contents, settings);
                                        },
                                        "Run" },
                         }
