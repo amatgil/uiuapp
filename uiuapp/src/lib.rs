@@ -97,24 +97,17 @@ pub fn handle_running_code(
     mut buffer_contents: Signal<Vec<ScrollbackItem>>,
 ) {
     use ScrollbackItem as SBI;
+    buffer_contents
+        .write()
+        .push(SBI::Input(highlight_code(&input_contents.read().clone())));
     match run_uiua(&input_contents()) {
         Ok(v) => {
-            buffer_contents
-                .write()
-                .push(SBI::Input(highlight_code(&input_contents.read().clone())));
-
             for s in v {
                 buffer_contents.write().push(SBI::Output(s));
             }
-            //*input_contents.write() = String::new(); // This was seen as undesirable
-            // TODO: Add as Settings option
+            //*input_contents.write() = String::new(); // This was seen as undesirable, TODO: add as Setting option
         }
         Err(s) => {
-            let text = match format_str(&input_contents.read(), &FormatConfig::default()) {
-                Ok(t) => t.output,
-                Err(e) => e.to_string(),
-            };
-            buffer_contents.write().push(SBI::Input(Err(text)));
             buffer_contents.write().push(SBI::Output(s));
             *input_contents.write() = String::new();
         }

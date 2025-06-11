@@ -57,7 +57,6 @@ pub fn css_of_prim(p: &P) -> &'static str {
         (P::Both, "prim-both"),
         (P::Identity, "stack-function"),
     ];
-    dbg!(p);
     if let Some((_, s)) = special_cased.iter().find(|l| l.0 == *p) {
         s
     } else if let Some(args) = p.args() {
