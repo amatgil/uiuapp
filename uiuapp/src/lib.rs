@@ -9,7 +9,7 @@ use dioxus::{
     prelude::*,
 };
 use lazy_static::lazy_static;
-use std::{f32::consts::PI, fmt::Display};
+use std::f32::consts::PI;
 use uiua::{
     ast::Subscript,
     format::{format_str, FormatConfig},
@@ -50,6 +50,9 @@ pub enum ScrollbackOutput {
     Gif(Vec<u8>),
     Audio(Vec<u8>),
 }
+
+#[derive(Debug, Clone)]
+pub struct Settings {}
 
 pub fn run_uiua(code: &str) -> Result<Vec<ScrollbackOutput>, String> {
     let mut runtime = uiua::Uiua::with_safe_sys();

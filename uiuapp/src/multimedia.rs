@@ -1,5 +1,4 @@
 use crate::*;
-use dioxus::prelude::*;
 use dioxus_logger::tracing::*;
 
 use ScrollbackOutput as O;
