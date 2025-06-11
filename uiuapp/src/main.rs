@@ -128,7 +128,9 @@ fn App() -> Element {
                                             ScrollbackOutput::Audio(bytes) => {
                                                 let data = general_purpose::STANDARD.encode(&bytes);
                                                 rsx! {
-                                                    audio { class: "user-result", controls: true, src: "data:audio/wav;base64,{data}" }
+                                                    audio { class: "user-result", controls: true,
+                                                            autoplay: settings.read().autoplay_audio,
+                                                            src: "data:audio/wav;base64,{data}" }
                                                 }
                                             },
                                             ScrollbackOutput::Gif(bytes) => {
