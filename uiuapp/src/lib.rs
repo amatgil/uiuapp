@@ -54,9 +54,9 @@ pub enum ScrollbackOutput {
 #[derive(Debug, Clone)]
 pub struct Settings {
     pub clean_input_on_run: bool,
-    pub execution_limit: Duration, // TODO: make it do something
-    pub audio_sample_time: u32,    // TODO: make it do something
-    pub autoplay_audio: bool,      // TODO: make it do something
+    pub execution_limit: Duration,   // TODO: make it do something
+    pub audio_sample_time: Duration, // TODO: make it do something
+    pub autoplay_audio: bool,
     pub stack_ordering: StackOrdering,
     pub font_size: f32,                    // TODO: make it do something
     pub stack_preserved_across_runs: bool, // TODO: make it do something
@@ -73,11 +73,11 @@ impl Default for Settings {
         Self {
             clean_input_on_run: false,
             execution_limit: Duration::from_secs(5),
-            audio_sample_time: 44100,
+            audio_sample_time: Duration::from_secs(30),
             autoplay_audio: false,
             stack_ordering: StackOrdering::default(),
-            font_size: 100.0,                  // TODO: implement
-            stack_preserved_across_runs: true, // TODO: implement
+            font_size: 100.0,
+            stack_preserved_across_runs: true,
         }
     }
 }
