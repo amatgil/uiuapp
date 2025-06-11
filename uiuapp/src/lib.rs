@@ -98,6 +98,7 @@ impl Default for Settings {
     }
 }
 
+// TODO: Make sure bindings are preserved
 pub fn run_uiua(
     code: &str,
     mut settings: Signal<Settings>,
