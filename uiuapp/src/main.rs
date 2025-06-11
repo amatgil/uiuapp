@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
 
 use crate::document::*;
+use base64::engine::general_purpose;
+use base64::Engine;
 use dioxus::prelude::*;
 use dioxus_logger::tracing::{info, Level};
 use uiuapp::ScrollbackItem as SBI;
@@ -22,15 +24,18 @@ fn App() -> Element {
     // populated for testing
     // TODO(release): depopulate
     let mut buffer_contents = use_signal(|| {
+        let code = "˙⊞=⇡3";
+        let output = SBI::Output(run_uiua(code).unwrap()[0].clone());
+        let c = SBI::Input(highlight_code(code));
         vec![
             SBI::Input(highlight_code("+ 1 1")),
-            SBI::Output("2".to_string()),
-            SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
-            SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
-            SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
+            SBI::Output(ScrollbackOutput::Text("2".to_string())),
+            c.clone(),
+            output.clone(),
+            c.clone(),
+            output.clone(),
+            c.clone(),
+            output.clone(),
         ]
     });
     // Has been input but not yet evaluated
@@ -39,111 +44,132 @@ fn App() -> Element {
     let rad_info: Signal<RadialInfo> = use_signal(RadialInfo::new);
 
     rsx! {
-        Meta { charset: "UTF-8" }
-        Meta {
-            content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
-            name: "viewport",
-        }
-        Title { "cas/uiuapp" }
-        Stylesheet { href: CSS }
-
-        div { class: "app",
-            div { class: "top-bar",
-                button {
-                    onclick: move |e| {
-                        info!("Settings button pressed (unimplemented as of yet)");
-                    },
-                    "Settings"
-                }
+            Meta { charset: "UTF-8" }
+            Meta {
+                content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
+                name: "viewport",
             }
-            div { class: "code-view-zone",
-                for item in buffer_contents.read().clone() {
-                    {
-                        match item {
-                            SBI::Input(input) => {
-                                rsx! {
-                                    p { class: "user-input",
-                                    onclick: move |_e| {
-                                        if input_contents().is_empty() {
-                                            *input_contents.write() = match input {
-                                                Ok(ref v) => v.iter().map(|uhs| match uhs {
-                                                    // Bunch of cloning, this should be benchmarked
-                                                    UiuappHistorySpan::UnstyledCode { text } => text.clone(),
-                                                    UiuappHistorySpan::StyledCode { text, .. } => text.clone(),
-                                                    UiuappHistorySpan::Whitspace(text) => text.clone(),
-                                                }).collect::<Vec<String>>().join(""),
-                                                Err(ref s) => s.to_string()
-                                            };
-                                        }
-                                    },
-                                        match input {
-                                            Ok(ref v) => {
-                                                rsx! {
-                                                    for uhs in v {
-                                                        match uhs {
-                                                            UiuappHistorySpan::UnstyledCode { text } => rsx! { span { "{text}" } },
-                                                            UiuappHistorySpan::StyledCode { class: c, text } => rsx! { span { class: "{c}", "{text}"} },
-                                                            UiuappHistorySpan::Whitspace(text) => rsx! { span { "{text}" } },
+            Title { "cas/uiuapp" }
+            Stylesheet { href: CSS }
+
+            div { class: "app",
+                div { class: "top-bar",
+                    button {
+                        onclick: move |e| {
+                            info!("Settings button pressed (unimplemented as of yet)");
+                        },
+                        "Settings"
+                    }
+                }
+                div { class: "code-view-zone",
+                    for item in buffer_contents.read().clone() {
+                        {
+                            match item {
+                                SBI::Input(input) => {
+                                    rsx! {
+                                        p { class: "user-input",
+                                        onclick: move |_e| {
+                                            if input_contents().is_empty() {
+                                                *input_contents.write() = match input {
+                                                    Ok(ref v) => v.iter().map(|uhs| match uhs {
+                                                        // Bunch of cloning, this should be benchmarked
+                                                        UiuappHistorySpan::UnstyledCode { text } => text.clone(),
+                                                        UiuappHistorySpan::StyledCode { text, .. } => text.clone(),
+                                                        UiuappHistorySpan::Whitspace(text) => text.clone(),
+                                                    }).collect::<Vec<String>>().join(""),
+                                                    Err(ref s) => s.to_string()
+                                                };
+                                            }
+                                        },
+                                            match input {
+                                                Ok(ref v) => {
+                                                    rsx! {
+                                                        for uhs in v {
+                                                            match uhs {
+                                                                UiuappHistorySpan::UnstyledCode { text } => rsx! { span { "{text}" } },
+                                                                UiuappHistorySpan::StyledCode { class: c, text } => rsx! { span { class: "{c}", "{text}"} },
+                                                                UiuappHistorySpan::Whitspace(text) => rsx! { span { "{text}" } },
+                                                            }
                                                         }
                                                     }
                                                 }
+                                                Err(ref s) => rsx! { span { "{s}" } }
                                             }
-                                            Err(ref s) => rsx! { span { "{s}" } }
-                                        }
 
+                                        }
+                                    }
+                                },
+                                SBI::Output(ScrollbackOutput::Text(text)) => {
+                                    info!("TEXT");
+                                    rsx! {
+                                        p { class: "user-result", "{text}" }
                                     }
                                 }
-                            },
-                            SBI::Output(text) => {
-                                rsx! {
-                                    p { class: "user-result", "{text}" }
+                                SBI::Output(ScrollbackOutput::Image(bytes)) => {
+    //<img id="ItemPreview" src="">
+                                    let data = general_purpose::STANDARD.encode(&bytes);
+                                    rsx! {
+                                        img { class: "user-result", src: "data:image/png;base64,{data}" }
+                                    }
+                                }
+                                SBI::Output(ScrollbackOutput::Audio(bytes)) => {
+                                    let data = general_purpose::STANDARD.encode(&bytes);
+                                    rsx! {
+                                        audio { class: "user-result", controls: true, src: "data:audio/wav;base64,{data}" }
+                                    }
+                                }
+                                SBI::Output(ScrollbackOutput::Gif(bytes)) => {
+                                    let data = general_purpose::STANDARD.encode(&bytes);
+                                    rsx! {
+                                        img { class: "user-result", src: "data:image/gif;base64,{data}" }
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-              div { class: "input-zone",
-                    RadialSelector { input_contents, rad_info }
-                    div { class: "input-bar",
-                    // This textarea should bring up the native keyboard for
-                    // ascii-and-related typing
-                          textarea { class: "text-box", rows: 2,
-                                     onkeydown: move |e| {
-                                         if let Key::Enter = e.key() {
-                                             info!("Return gotten");
-                                             if e.modifiers().contains(Modifiers::CONTROL) {
-                                                 e.prevent_default();
-                                                 info!("Running from shortcut");
-                                                 handle_running_code(input_contents, buffer_contents);
+                  div { class: "input-zone",
+                        RadialSelector { input_contents, rad_info }
+                        div { class: "input-bar",
+                        // This textarea should bring up the native keyboard for
+                        // ascii-and-related typing
+                              textarea { class: "text-box", rows: 2,
+                                         onkeydown: move |e| {
+                                             if let Key::Enter = e.key() {
+                                                 info!("Return gotten");
+                                                 if e.modifiers().contains(Modifiers::CONTROL) {
+                                                     e.prevent_default();
+                                                     info!("Running from shortcut");
+                                                     handle_running_code(input_contents, buffer_contents);
+                                                 }
                                              }
-                                         }
-                                     },
-                                     onchange: move |e| {
-                                         *input_contents.write() = e.value();
-                                     },
-                                     value: input_contents }
-                          button { class: "run-button",
-                                   onclick: move |e| {
-                                       handle_running_code(input_contents, buffer_contents);
-                                   },
-                                   "Run" },
-                    }
-                    div { class: "special-buttons",
-                          button { class: "special-button", onclick: move |_| {input_contents.write().push('\n');}, "Ret" }
-                          button { class: "special-button", onclick: move |_| {*buffer_contents.write() = vec![];}, "Clear Past" }
-                          button { class: "special-button", onclick: move |_| {*input_contents.write() = "".to_string();}, "Clear Curr" }
-                          button { class: "special-button", onclick: move |_| {input_contents.write().push(';');}, ";" }
-                          button { class: "special-button", "←" } // TODO: position cursor
-                          button { class: "special-button", "↓" }
-                          button { class: "special-button", "↑" }
-                          button { class: "special-button", "→" }
-                          button { class: "special-button", onclick: move |_| {input_contents.write().pop();}, "Bksp" }
-                    }
-                    div { class: "input-grid-buttons",
-                           ButtonIcons { input_contents, rad_info }
-                    }
-              }
+                                         },
+                                         onchange: move |e| {
+                                             *input_contents.write() = e.value();
+                                         },
+                                         value: input_contents }
+                              button { class: "run-button",
+                                       onclick: move |e| {
+                                           handle_running_code(input_contents, buffer_contents);
+                                       },
+                                       "Run" },
+                        }
+                        div { class: "special-buttons",
+                              button { class: "special-button", onclick: move |_| {input_contents.write().push('\n');}, "Ret" }
+                              button { class: "special-button", onclick: move |_| {*buffer_contents.write() = vec![];}, "Clear Past" }
+                              button { class: "special-button", onclick: move |_| {*input_contents.write() = "".to_string();}, "Clear Curr" }
+                              button { class: "special-button", onclick: move |_| {input_contents.write().push(';');}, ";" }
+                              // TODO: Decide if these arrows should even exist
+                              /*button { class: "special-button", "←" } // TODO: position cursor
+                              button { class: "special-button", "↓" }
+                              button { class: "special-button", "↑" }
+                              button { class: "special-button", "→" }*/
+                              button { class: "special-button", onclick: move |_| {input_contents.write().pop();}, "Bksp" }
+                        }
+                        div { class: "input-grid-buttons",
+                               ButtonIcons { input_contents, rad_info }
+                        }
+                  }
+            }
         }
-    }
 }
