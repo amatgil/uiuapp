@@ -108,7 +108,7 @@ fn App() -> Element {
                     div { class: "input-bar",
                     // This textarea should bring up the native keyboard for
                     // ascii-and-related typing
-                          textarea { class: "text-box", rows: 1,
+                          textarea { class: "text-box", rows: 2,
                                      onkeydown: move |e| {
                                          if let Key::Enter = e.key() {
                                              info!("Return gotten");

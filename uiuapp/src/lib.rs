@@ -110,9 +110,11 @@ pub fn handle_running_code(
             // TODO: Add as Settings option
         }
         Err(s) => {
-            buffer_contents
-                .write()
-                .push(SBI::Input(Err(input_contents.read().clone())));
+            let text = match format_str(&input_contents.read(), &FormatConfig::default()) {
+                Ok(t) => t.output,
+                Err(e) => e.to_string(),
+            };
+            buffer_contents.write().push(SBI::Input(Err(text)));
             buffer_contents.write().push(SBI::Output(s));
             *input_contents.write() = String::new();
         }

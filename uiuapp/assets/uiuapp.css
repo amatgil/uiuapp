@@ -206,8 +206,14 @@ button:hover {
 .strand {
     color: #fff8;
 }
-.uiua-trans {
+.prim-trans {
     background-image: linear-gradient(180deg, #5BCEFA 34%, #F5A9B8 34%, #F5A9B8 45%, #FFFFFF 45%, #FFFFFF 56%, #F5A9B8 56%, #F5A9B8 67%, #5BCEFA 67%);
+    background-size: 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.prim-both {
+    background-image: linear-gradient(180deg, #D60270 45%, #9B4F96 45%, #9B4F96 64%, #0038A8 64%);
     background-size: 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
