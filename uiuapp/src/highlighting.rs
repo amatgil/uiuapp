@@ -120,14 +120,14 @@ fn html_class_of_prim(prim: P, args: Option<usize>) -> Option<&'static str> {
     let special_cased = [(P::Transpose, "prim-trans"), (P::Both, "prim-both")];
     if let Some((_, s)) = special_cased.iter().find(|l| l.0 == prim) {
         Some(s)
+    } else if matches!(prim.class(), PrimClass::Stack | PrimClass::Debug) || prim == P::Identity {
+        Some("stack-function")
     } else if let Some(args) = prim.modifier_args() {
         return if args == 1 {
             Some("monadic-modifier")
         } else {
             Some("dyadic-modifier")
         };
-    } else if matches!(prim.class(), PrimClass::Stack | PrimClass::Debug) || prim == P::Identity {
-        Some("stack-function")
     } else if let Some(args) = args.or(prim.sig().map(|sig| sig.args())) {
         match args {
             0 => Some("noadic-function"),
