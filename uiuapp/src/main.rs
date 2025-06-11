@@ -24,13 +24,14 @@ fn App() -> Element {
     let mut buffer_contents = use_signal(|| {
         vec![
             SBI::Input(highlight_code("+ 1 1")),
-            SBI::Output("2".to_string()),
+            SBI::Output(ScrollbackOutput::Text("2".to_string())),
             SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
+            SBI::Output(ScrollbackOutput::Text("2".to_string())),
+            SBI::Output(ScrollbackOutput::Text("2".to_string())),
             SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
+            SBI::Output(ScrollbackOutput::Text("2".to_string())),
             SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output("1 0 0\n0 1 0\n0 0 1".to_string()),
+            SBI::Output(ScrollbackOutput::Text("2".to_string())),
         ]
     });
     // Has been input but not yet evaluated
@@ -94,9 +95,21 @@ fn App() -> Element {
                                     }
                                 }
                             },
-                            SBI::Output(text) => {
+                            SBI::Output(ScrollbackOutput::Text(text)) => {
                                 rsx! {
                                     p { class: "user-result", "{text}" }
+                                }
+                            }
+                            SBI::Output(ScrollbackOutput::Image(bytes)) => {
+                                info!("Tried rendering an image, todo");
+                                rsx! {
+                                    p { class: "user-result", "THIS WAS AN IMAGE" }
+                                }
+                            }
+                            SBI::Output(ScrollbackOutput::Audio(bytes)) => {
+                                info!("Tried rendering audio, todo");
+                                rsx! {
+                                    p { class: "user-result", "THIS WAS AN IMAGE" }
                                 }
                             }
                         }

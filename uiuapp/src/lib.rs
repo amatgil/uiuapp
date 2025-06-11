@@ -1,4 +1,5 @@
 pub mod highlighting;
+pub mod multimedia;
 pub mod ui;
 pub use highlighting::*;
 pub use ui::*;
@@ -39,7 +40,15 @@ const DEADZONE_RADIUS: f64 = 30.;
 #[derive(Debug, Clone)]
 pub enum ScrollbackItem {
     Input(Result<Vec<UiuappHistorySpan>, String>),
-    Output(String),
+    Output(ScrollbackOutput),
+}
+
+#[derive(Debug, Clone)]
+pub enum ScrollbackOutput {
+    Text(String),
+    Image(Vec<u8>),
+    Gif(Vec<u8>),
+    Audio(Vec<u8>),
 }
 
 pub fn run_uiua(code: &str) -> Result<Vec<String>, String> {
@@ -103,12 +112,16 @@ pub fn handle_running_code(
     match run_uiua(&input_contents()) {
         Ok(v) => {
             for s in v {
-                buffer_contents.write().push(SBI::Output(s));
+                buffer_contents
+                    .write()
+                    .push(SBI::Output(ScrollbackOutput::Text(s)));
             }
             //*input_contents.write() = String::new(); // This was seen as undesirable, TODO: add as Setting option
         }
         Err(s) => {
-            buffer_contents.write().push(SBI::Output(s));
+            buffer_contents
+                .write()
+                .push(SBI::Output(ScrollbackOutput::Text(s)));
             *input_contents.write() = String::new();
         }
     }
