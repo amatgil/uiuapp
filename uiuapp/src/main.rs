@@ -146,10 +146,10 @@ pub fn ScrollbackItemRender(
                     }
                 },
                 SBII::Output(outputs) => {
-                    //let outputs = match settings.read().stack_ordering {
-                    //    StackOrdering::TopAtTop => outputs,
-                    //    StackOrdering::BottomAtTop => outputs.into_iter().rev().collect(),
-                    //};
+                    let outputs = match settings.read().stack_ordering {
+                        StackOrdering::TopAtTop => outputs,
+                        StackOrdering::BottomAtTop => outputs.into_iter().rev().collect(),
+                    };
                     rsx! {
                         div {
                             key: item.key,
