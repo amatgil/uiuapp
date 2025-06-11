@@ -88,7 +88,7 @@ impl Default for Settings {
 
 pub fn run_uiua(code: &str) -> Result<Vec<ScrollbackOutput>, String> {
     let mut runtime = uiua::Uiua::with_safe_sys();
-    match runtime.run_str(code) {
+    match runtime.compile_run(|comp| comp.experimental(true).load_str(code)) {
         Ok(_compiler) => Ok(runtime
             .take_stack()
             .into_iter()
