@@ -37,6 +37,12 @@ pub const UNKNOWN_GLYPH: char = '¡';
 pub const EXPERIMENTAL_ICON: &str = "🧪";
 const DEADZONE_RADIUS: f64 = 30.;
 
+/// Each element that's displayed back to the user is either
+/// - Input: the user wrote this themselves. This is represented as a Result, where Ok
+///          contains a vector of spans and Err (which indicates an error in the formatter)
+///          where the String is reported
+/// - Output: a vec of outputs (it's a vector because the entire stack is reported per
+///           execution)
 #[derive(Debug, Clone)]
 pub enum ScrollbackItem {
     Input(Result<Vec<UiuappHistorySpan>, String>),
@@ -75,7 +81,7 @@ impl Default for Settings {
             execution_limit: Duration::from_secs(5),
             audio_sample_time: Duration::from_secs(30),
             autoplay_audio: false,
-            stack_ordering: StackOrdering::default(),
+            stack_ordering: StackOrdering::TopAtTop,
             font_size: 100.0,
             stack_preserved_across_runs: true,
             runtime: uiua::Uiua::with_safe_sys(),
