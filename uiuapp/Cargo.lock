@@ -3006,6 +3006,7 @@ dependencies = [
 name = "uiuapp"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "dioxus",
  "dioxus-logger 0.5.1",
  "getrandom 0.2.16",

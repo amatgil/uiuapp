@@ -7,7 +7,7 @@ const MIN_AUTO_IMAGE_DIM: usize = 30;
 const AUDIO_SAMPLE_RATE: u32 = 44100; // TODO: This should be in the Settings menu
 
 impl ScrollbackOutput {
-    fn from_uiuavalue(value: uiua::Value, settings: ()) -> Self {
+    pub fn from_uiuavalue(value: uiua::Value, settings: ()) -> Self {
         use uiua::media::*;
         use uiua::Value;
 

@@ -51,27 +51,14 @@ pub enum ScrollbackOutput {
     Audio(Vec<u8>),
 }
 
-pub fn run_uiua(code: &str) -> Result<Vec<String>, String> {
+pub fn run_uiua(code: &str) -> Result<Vec<ScrollbackOutput>, String> {
     let mut runtime = uiua::Uiua::with_safe_sys();
     match runtime.run_str(code) {
-        Ok(_compiler) => {
-            let mut out = vec![];
-            for s in runtime.take_stack() {
-                let s = s.show();
-                if s.len() > MAX_OUTPUT_CHARS {
-                    out.push(
-                        s.chars()
-                            .take(MAX_OUTPUT_CHARS)
-                            .chain(vec!['.', '.', '.'].into_iter())
-                            .collect(),
-                    );
-                } else {
-                    out.push(s);
-                }
-            }
-
-            return Ok(out);
-        }
+        Ok(_compiler) => Ok(runtime
+            .take_stack()
+            .into_iter()
+            .map(|v| ScrollbackOutput::from_uiuavalue(v, ()))
+            .collect()),
         Err(e) => Err(e.to_string()),
     }
 }
@@ -110,11 +97,25 @@ pub fn handle_running_code(
         .write()
         .push(SBI::Input(highlight_code(&input_contents.read().clone())));
     match run_uiua(&input_contents()) {
-        Ok(v) => {
-            for s in v {
-                buffer_contents
-                    .write()
-                    .push(SBI::Output(ScrollbackOutput::Text(s)));
+        Ok(sbo) => {
+            for s in sbo {
+                if let ScrollbackOutput::Text(ref text) = s {
+                    if text.len() > MAX_OUTPUT_CHARS {
+                        let text = text
+                            .chars()
+                            .take(MAX_OUTPUT_CHARS)
+                            .chain(vec!['.', '.', '.'].into_iter())
+                            .collect();
+
+                        buffer_contents
+                            .write()
+                            .push(SBI::Output(ScrollbackOutput::Text(text)));
+                    } else {
+                        buffer_contents.write().push(SBI::Output(s));
+                    }
+                } else {
+                    buffer_contents.write().push(SBI::Output(s));
+                }
             }
             //*input_contents.write() = String::new(); // This was seen as undesirable, TODO: add as Setting option
         }
