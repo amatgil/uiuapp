@@ -68,7 +68,8 @@ pub enum ScrollbackOutput {
     Audio(Vec<u8>),
 }
 
-/// When
+/// Essentially the state (though 'state' is ambiguous is because most
+/// if it is in the DOM)
 pub struct Settings {
     pub clean_input_on_run: bool,
     pub autoplay_audio: bool,
