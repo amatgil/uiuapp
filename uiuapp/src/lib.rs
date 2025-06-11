@@ -210,11 +210,29 @@ lazy_static! {
         // ===== ROW FOUR ====
 
         // TBD
-        vec![E::Right(("Empty", ""))],
+        vec![E::Right(("Empty", ""))], // TODO: Figure out what to put here (baby fat for now)
         // Digits
-        vec![E::Right(("0", "constant-value"))],
+        vec![E::Right(("0", "constant-value")), // TODO: These should bring up a keypad (see issue #9)
+             E::Right(("1", "constant-value")),
+             E::Right(("2", "constant-value")),
+             E::Right(("3", "constant-value")),
+             E::Right(("4", "constant-value")),
+             E::Right(("5", "constant-value")),
+             E::Right(("6", "constant-value")),
+             E::Right(("7", "constant-value")),
+             E::Right(("8", "constant-value")),
+             E::Right(("9", "constant-value"))],
         // Subs
-        vec![E::Right(("₀", "constant-value"))],
+        vec![E::Right(("₀", "constant-value")),
+             E::Right(("₁", "constant-value")),
+             E::Right(("₂", "constant-value")),
+             E::Right(("₃", "constant-value")),
+             E::Right(("₄", "constant-value")),
+             E::Right(("₅", "constant-value")),
+             E::Right(("₆", "constant-value")),
+             E::Right(("₇", "constant-value")),
+             E::Right(("₈", "constant-value")),
+             E::Right(("₉", "constant-value"))],
         // Exp
         vec![E::Right((EXPERIMENTAL_ICON, ""))], // TODO: Should/Must be autopopulated
         // Idioms
