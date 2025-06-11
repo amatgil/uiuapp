@@ -24,16 +24,18 @@ fn App() -> Element {
     // populated for testing
     // TODO(release): depopulate
     let mut buffer_contents = use_signal(|| {
+        let code = "˙⊞=⇡3";
+        let output = SBI::Output(run_uiua(code).unwrap()[0].clone());
+        let c = SBI::Input(highlight_code(code));
         vec![
             SBI::Input(highlight_code("+ 1 1")),
             SBI::Output(ScrollbackOutput::Text("2".to_string())),
-            SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output(ScrollbackOutput::Text("2".to_string())),
-            SBI::Output(ScrollbackOutput::Text("2".to_string())),
-            SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output(ScrollbackOutput::Text("2".to_string())),
-            SBI::Input(highlight_code("˙⊞=⇡3")),
-            SBI::Output(ScrollbackOutput::Text("2".to_string())),
+            c.clone(),
+            output.clone(),
+            c.clone(),
+            output.clone(),
+            c.clone(),
+            output.clone(),
         ]
     });
     // Has been input but not yet evaluated
@@ -157,10 +159,11 @@ fn App() -> Element {
                               button { class: "special-button", onclick: move |_| {*buffer_contents.write() = vec![];}, "Clear Past" }
                               button { class: "special-button", onclick: move |_| {*input_contents.write() = "".to_string();}, "Clear Curr" }
                               button { class: "special-button", onclick: move |_| {input_contents.write().push(';');}, ";" }
-                              button { class: "special-button", "←" } // TODO: position cursor
+                              // TODO: Decide if these arrows should even exist
+                              /*button { class: "special-button", "←" } // TODO: position cursor
                               button { class: "special-button", "↓" }
                               button { class: "special-button", "↑" }
-                              button { class: "special-button", "→" }
+                              button { class: "special-button", "→" }*/
                               button { class: "special-button", onclick: move |_| {input_contents.write().pop();}, "Bksp" }
                         }
                         div { class: "input-grid-buttons",
