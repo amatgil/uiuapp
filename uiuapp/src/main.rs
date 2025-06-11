@@ -25,12 +25,12 @@ fn App() -> Element {
     // TODO(release): depopulate
     let mut buffer_contents = use_signal(|| {
         let code = "˙⊞=⇡3";
-        let output = SBI::Output(run_uiua(code).unwrap()[0].clone());
+        let output = SBI::Output(vec![run_uiua(code).unwrap()[0].clone()]);
         let c = SBI::Input(highlight_code(code));
 
         vec![
             SBI::Input(highlight_code("+ 1 1")),
-            SBI::Output(ScrollbackOutput::Text("2".to_string())),
+            SBI::Output(vec![ScrollbackOutput::Text("2".to_string())]),
             c.clone(),
             output.clone(),
             c.clone(),
@@ -105,28 +105,40 @@ fn App() -> Element {
                                     }
                                 }
                             },
-                            SBI::Output(ScrollbackOutput::Text(text)) => {
-                                info!("TEXT");
+                            SBI::Output(outputs) => {
+                                let outputs = match settings.read().stack_ordering {
+                                    StackOrdering::TopAtTop => outputs,
+                                    StackOrdering::BottomAtTop => outputs.into_iter().rev().collect(),
+                                };
                                 rsx! {
-                                    p { class: "user-result", "{text}" }
-                                }
-                            }
-                            SBI::Output(ScrollbackOutput::Image(bytes)) => {
-                                let data = general_purpose::STANDARD.encode(&bytes);
-                                rsx! {
-                                    img { class: "user-result", src: "data:image/png;base64,{data}" }
-                                }
-                            }
-                            SBI::Output(ScrollbackOutput::Audio(bytes)) => {
-                                let data = general_purpose::STANDARD.encode(&bytes);
-                                rsx! {
-                                    audio { class: "user-result", controls: true, src: "data:audio/wav;base64,{data}" }
-                                }
-                            }
-                            SBI::Output(ScrollbackOutput::Gif(bytes)) => {
-                                let data = general_purpose::STANDARD.encode(&bytes);
-                                rsx! {
-                                    img { class: "user-result", src: "data:image/gif;base64,{data}" }
+                                    for output in outputs {
+                                        match output {
+                                            ScrollbackOutput::Text(text) => {
+                                                info!("TEXT");
+                                                rsx! {
+                                                    p { class: "user-result", "{text}" }
+                                                }
+                                            },
+                                            ScrollbackOutput::Image(bytes) => {
+                                                let data = general_purpose::STANDARD.encode(&bytes);
+                                                rsx! {
+                                                    img { class: "user-result", src: "data:image/png;base64,{data}" }
+                                                }
+                                            },
+                                            ScrollbackOutput::Audio(bytes) => {
+                                                let data = general_purpose::STANDARD.encode(&bytes);
+                                                rsx! {
+                                                    audio { class: "user-result", controls: true, src: "data:audio/wav;base64,{data}" }
+                                                }
+                                            },
+                                            ScrollbackOutput::Gif(bytes) => {
+                                                let data = general_purpose::STANDARD.encode(&bytes);
+                                                rsx! {
+                                                    img { class: "user-result", src: "data:image/gif;base64,{data}" }
+                                                }
+                                            },
+                                        }
+                                    }
                                 }
                             }
                         }

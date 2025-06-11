@@ -40,7 +40,7 @@ const DEADZONE_RADIUS: f64 = 30.;
 #[derive(Debug, Clone)]
 pub enum ScrollbackItem {
     Input(Result<Vec<UiuappHistorySpan>, String>),
-    Output(ScrollbackOutput),
+    Output(Vec<ScrollbackOutput>),
 }
 
 #[derive(Debug, Clone)]
@@ -109,25 +109,22 @@ pub fn handle_running_code(
         .push(SBI::Input(highlight_code(&input_contents.read().clone())));
     match run_uiua(&input_contents()) {
         Ok(sbo) => {
-            for s in sbo {
-                if let ScrollbackOutput::Text(ref text) = s {
-                    if text.len() > MAX_OUTPUT_CHARS {
-                        let text = text
-                            .chars()
-                            .take(MAX_OUTPUT_CHARS)
-                            .chain(vec!['.', '.', '.'].into_iter())
-                            .collect();
-
-                        buffer_contents
-                            .write()
-                            .push(SBI::Output(ScrollbackOutput::Text(text)));
-                    } else {
-                        buffer_contents.write().push(SBI::Output(s));
+            let s = sbo
+                .into_iter()
+                .map(|s| match s {
+                    ScrollbackOutput::Text(ref text) if text.len() > MAX_OUTPUT_CHARS => {
+                        ScrollbackOutput::Text(
+                            text.chars()
+                                .take(MAX_OUTPUT_CHARS)
+                                .chain(vec!['.', '.', '.'].into_iter())
+                                .collect(),
+                        )
                     }
-                } else {
-                    buffer_contents.write().push(SBI::Output(s));
-                }
-            }
+                    x => x,
+                })
+                .collect();
+
+            buffer_contents.write().push(SBI::Output(s));
             if settings.read().clean_input_on_run {
                 *input_contents.write() = String::new();
             }
@@ -135,7 +132,7 @@ pub fn handle_running_code(
         Err(s) => {
             buffer_contents
                 .write()
-                .push(SBI::Output(ScrollbackOutput::Text(s)));
+                .push(SBI::Output(vec![ScrollbackOutput::Text(s)]));
             *input_contents.write() = String::new();
         }
     }
