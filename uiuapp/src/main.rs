@@ -117,9 +117,9 @@ fn App() -> Element {
                                     }
                                 }
                                 SBI::Output(ScrollbackOutput::Gif(bytes)) => {
-                                    info!("Tried rendering gif, todo");
+                                    let data = general_purpose::STANDARD.encode(&bytes);
                                     rsx! {
-                                        p { class: "user-result", "THIS WAS A GIF" }
+                                        img { class: "user-result", src: "data:image/gif;base64,{data}" }
                                     }
                                 }
                             }
