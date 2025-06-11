@@ -68,15 +68,16 @@ pub enum ScrollbackOutput {
     Audio(Vec<u8>),
 }
 
+/// When
 pub struct Settings {
     pub clean_input_on_run: bool,
-    pub execution_limit: Duration,   // TODO: make it do something
     pub audio_sample_time: Duration, // TODO: make it do something
     pub autoplay_audio: bool,
     pub stack_ordering: StackOrdering,
     pub font_size: f32, // TODO: make it do something
     pub stack_preserved_across_runs: bool,
-    pub runtime: uiua::Uiua,
+    pub runtime: uiua::Uiua, // TODO: add execution limit to the
+                             // runtime (.with_execution_limit)
 }
 #[derive(Debug, Clone, Default)]
 pub enum StackOrdering {
