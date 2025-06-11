@@ -117,26 +117,26 @@ fn html_class_of(s: &SpanKind) -> Option<&'static str> {
     }
 }
 fn html_class_of_prim(prim: P, args: Option<usize>) -> Option<&'static str> {
-    if let Some(args) = prim.modifier_args() {
+    let special_cased = [(P::Transpose, "prim-trans"), (P::Both, "prim-both")];
+    if let Some((_, s)) = special_cased.iter().find(|l| l.0 == prim) {
+        Some(s)
+    } else if let Some(args) = prim.modifier_args() {
         return if args == 1 {
             Some("monadic-modifier")
         } else {
             Some("dyadic-modifier")
         };
-    }
-
-    if matches!(prim.class(), PrimClass::Stack | PrimClass::Debug) || prim == P::Identity {
+    } else if matches!(prim.class(), PrimClass::Stack | PrimClass::Debug) || prim == P::Identity {
         Some("stack-function")
-    } else if prim == P::Transpose {
-        Some("uiua-trans")
+    } else if let Some(args) = args.or(prim.sig().map(|sig| sig.args())) {
+        match args {
+            0 => Some("noadic-function"),
+            1 => Some("monadic-function"),
+            2 => Some("dyadic-function"),
+            _ => None,
+        }
     } else {
-        args.or(prim.sig().map(|sig| sig.args()))
-            .and_then(|args| match args {
-                0 => Some("noadic-function"),
-                1 => Some("monadic-function"),
-                2 => Some("dyadic-function"),
-                _ => None,
-            })
+        None
     }
 }
 

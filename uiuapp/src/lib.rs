@@ -63,31 +63,6 @@ pub fn run_uiua(code: &str) -> Result<Vec<ScrollbackOutput>, String> {
     }
 }
 
-pub fn css_of_prim(p: &P) -> &'static str {
-    let special_cased = [
-        (P::Transpose, "uiua-trans"),
-        (P::Identity, "stack-function"),
-    ];
-    if let Some((_, s)) = special_cased.iter().find(|l| l.0 == *p) {
-        s
-    } else if let Some(args) = p.args() {
-        match args {
-            0 => "noadic-function",
-            1 => "monadic-function",
-            2 => "dyadic-function",
-            _ => "",
-        }
-    } else if let Some(args) = p.modifier_args() {
-        match args {
-            1 => "monadic-modifier",
-            2 => "dyadic-modifier",
-            _ => "",
-        }
-    } else {
-        ""
-    }
-}
-
 pub fn handle_running_code(
     mut input_contents: Signal<String>,
     mut buffer_contents: Signal<Vec<ScrollbackItem>>,
