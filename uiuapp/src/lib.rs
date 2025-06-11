@@ -74,8 +74,8 @@ pub struct Settings {
     pub audio_sample_time: Duration, // TODO: make it do something
     pub autoplay_audio: bool,
     pub stack_ordering: StackOrdering,
-    pub font_size: f32,                    // TODO: make it do something
-    pub stack_preserved_across_runs: bool, // TODO: make it do something
+    pub font_size: f32, // TODO: make it do something
+    pub stack_preserved_across_runs: bool,
     pub runtime: uiua::Uiua,
 }
 #[derive(Debug, Clone, Default)]
