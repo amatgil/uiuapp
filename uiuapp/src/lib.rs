@@ -9,7 +9,10 @@ use dioxus::{
     prelude::*,
 };
 use lazy_static::lazy_static;
-use std::{f32::consts::PI, time::Duration};
+use std::{
+    f32::consts::PI,
+    time::{Duration, Instant},
+};
 use uiua::{
     ast::Subscript,
     format::{format_str, FormatConfig},
@@ -37,14 +40,22 @@ pub const UNKNOWN_GLYPH: char = '¡';
 pub const EXPERIMENTAL_ICON: &str = "🧪";
 const DEADZONE_RADIUS: f64 = 30.;
 
-/// Each element that's displayed back to the user is either
+/// Each element that's displayed back to the user (stored in 'Inner') is either
 /// - Input: the user wrote this themselves. This is represented as a Result, where Ok
 ///          contains a vector of spans and Err (which indicates an error in the formatter)
 ///          where the String is reported
 /// - Output: a vec of outputs (it's a vector because the entire stack is reported per
 ///           execution)
+///
+/// We also store a randomly generated f64. We hope and pray that there's no collisions
+/// (it's between 0.0 and 1.0 but the chance of a collision should be around 2^-62)
 #[derive(Debug, Clone)]
-pub enum ScrollbackItem {
+pub struct ScrollbackItem {
+    pub inner: ScrollbackItemInner,
+    pub key: f64,
+}
+#[derive(Debug, Clone)]
+pub enum ScrollbackItemInner {
     Input(Result<Vec<UiuappHistorySpan>, String>),
     Output(Vec<ScrollbackOutput>),
 }
@@ -117,9 +128,11 @@ pub fn handle_running_code(
     settings: Signal<Settings>,
 ) {
     use ScrollbackItem as SBI;
-    buffer_contents
-        .write()
-        .push(SBI::Input(highlight_code(&input_contents.read().clone())));
+    use ScrollbackItemInner as SBII;
+    buffer_contents.write().push(SBI {
+        inner: SBII::Input(highlight_code(&input_contents.read().clone())),
+        key: uiua::random(),
+    });
     match run_uiua(&input_contents(), settings) {
         Ok(sbo) => {
             let s = sbo
@@ -137,15 +150,19 @@ pub fn handle_running_code(
                 })
                 .collect();
 
-            buffer_contents.write().push(SBI::Output(s));
+            buffer_contents.write().push(SBI {
+                inner: SBII::Output(s),
+                key: uiua::random(),
+            });
             if settings.read().clean_input_on_run {
                 *input_contents.write() = String::new();
             }
         }
         Err(s) => {
-            buffer_contents
-                .write()
-                .push(SBI::Output(vec![ScrollbackOutput::Text(s)]));
+            buffer_contents.write().push(SBI {
+                inner: SBII::Output(vec![ScrollbackOutput::Text(s)]),
+                key: uiua::random(),
+            });
         }
     }
 }

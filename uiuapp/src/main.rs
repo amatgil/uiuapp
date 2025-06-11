@@ -5,7 +5,7 @@ use base64::engine::general_purpose;
 use base64::Engine;
 use dioxus::prelude::*;
 use dioxus_logger::tracing::{info, Level};
-use uiuapp::ScrollbackItem as SBI;
+use uiuapp::ScrollbackItemInner as SBII;
 use uiuapp::*;
 
 fn main() {
@@ -107,15 +107,13 @@ pub fn ScrollbackItemRender(
     buffer_contents: Signal<Vec<ScrollbackItem>>,
     settings: Signal<Settings>,
 ) -> Element {
-    for x in &*buffer_contents.read() {
-        info!("{x:?}");
-    }
     rsx! {
         for item in buffer_contents.read().clone() { {
-            match item {
-                SBI::Input(input) => {
+            match item.inner {
+                SBII::Input(input) => {
                     rsx! {
                         p { class: "user-input",
+                            key: item.key,
                             onclick: move |_e| {
                                 if input_contents().is_empty() {
                                     *input_contents.write() = match input {
@@ -147,39 +145,42 @@ pub fn ScrollbackItemRender(
                         }
                     }
                 },
-                SBI::Output(outputs) => {
-                    let outputs = match settings.read().stack_ordering {
-                        StackOrdering::TopAtTop => outputs,
-                        StackOrdering::BottomAtTop => outputs.into_iter().rev().collect(),
-                    };
+                SBII::Output(outputs) => {
+                    //let outputs = match settings.read().stack_ordering {
+                    //    StackOrdering::TopAtTop => outputs,
+                    //    StackOrdering::BottomAtTop => outputs.into_iter().rev().collect(),
+                    //};
                     rsx! {
-                        for output in outputs {
-                            match output {
-                                ScrollbackOutput::Text(text) => {
-                                    rsx! {
-                                        p { class: "user-result", "{text}" }
-                                    }
-                                },
-                                ScrollbackOutput::Image(bytes) => {
-                                    let data = general_purpose::STANDARD.encode(&bytes);
-                                    rsx! {
-                                        img { class: "user-result", src: "data:image/png;base64,{data}" }
-                                    }
-                                },
-                                ScrollbackOutput::Audio(bytes) => {
-                                    let data = general_purpose::STANDARD.encode(&bytes);
-                                    rsx! {
-                                        audio { class: "user-result", controls: true,
-                                                autoplay: settings.read().autoplay_audio,
-                                                src: "data:audio/wav;base64,{data}" }
-                                    }
-                                },
-                                ScrollbackOutput::Gif(bytes) => {
-                                    let data = general_purpose::STANDARD.encode(&bytes);
-                                    rsx! {
-                                        img { class: "user-result", src: "data:image/gif;base64,{data}" }
-                                    }
-                                },
+                        div {
+                            key: item.key,
+                            for output in outputs {
+                                match output {
+                                    ScrollbackOutput::Text(text) => {
+                                        rsx! {
+                                            p { class: "user-result", "{text}" }
+                                        }
+                                    },
+                                    ScrollbackOutput::Image(bytes) => {
+                                        let data = general_purpose::STANDARD.encode(&bytes);
+                                        rsx! {
+                                            img { class: "user-result", src: "data:image/png;base64,{data}" }
+                                        }
+                                    },
+                                    ScrollbackOutput::Audio(bytes) => {
+                                        let data = general_purpose::STANDARD.encode(&bytes);
+                                        rsx! {
+                                            audio { class: "user-result", controls: true,
+                                                    autoplay: settings.read().autoplay_audio,
+                                                    src: "data:audio/wav;base64,{data}" }
+                                        }
+                                    },
+                                    ScrollbackOutput::Gif(bytes) => {
+                                        let data = general_purpose::STANDARD.encode(&bytes);
+                                        rsx! {
+                                            img { class: "user-result", src: "data:image/gif;base64,{data}" }
+                                        }
+                                    },
+                                }
                             }
                         }
                     }
