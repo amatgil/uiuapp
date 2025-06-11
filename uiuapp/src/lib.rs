@@ -9,11 +9,14 @@ use dioxus::{
     prelude::*,
 };
 use lazy_static::lazy_static;
-use std::{f32::consts::PI, time::Duration};
+use std::{
+    f32::consts::PI,
+    time::{Duration, Instant},
+};
 use uiua::{
     ast::Subscript,
     format::{format_str, FormatConfig},
-    PrimClass, Primitive as P, SpanKind,
+    PrimClass, Primitive as P, SafeSys, SpanKind, SysBackend,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -37,8 +40,22 @@ pub const UNKNOWN_GLYPH: char = '¡';
 pub const EXPERIMENTAL_ICON: &str = "🧪";
 const DEADZONE_RADIUS: f64 = 30.;
 
+/// Each element that's displayed back to the user (stored in 'Inner') is either
+/// - Input: the user wrote this themselves. This is represented as a Result, where Ok
+///          contains a vector of spans and Err (which indicates an error in the formatter)
+///          where the String is reported
+/// - Output: a vec of outputs (it's a vector because the entire stack is reported per
+///           execution)
+///
+/// We also store a randomly generated f64. We hope and pray that there's no collisions
+/// (it's between 0.0 and 1.0 but the chance of a collision should be around 2^-62)
 #[derive(Debug, Clone)]
-pub enum ScrollbackItem {
+pub struct ScrollbackItem {
+    pub inner: ScrollbackItemInner,
+    pub key: f64,
+}
+#[derive(Debug, Clone)]
+pub enum ScrollbackItemInner {
     Input(Result<Vec<UiuappHistorySpan>, String>),
     Output(Vec<ScrollbackOutput>),
 }
@@ -51,17 +68,15 @@ pub enum ScrollbackOutput {
     Audio(Vec<u8>),
 }
 
-#[derive(Debug, Clone)]
+/// When
 pub struct Settings {
     pub clean_input_on_run: bool,
-    pub execution_limit: Duration,         // TODO: make it do something
-    pub audio_sample_time: u32,            // TODO: make it do something
-    pub autoplay_video: bool,              // TODO: make it do something
-    pub autoplay_audio: bool,              // TODO: make it do something
-    pub gayness: (),                       // TODO: make it do something
-    pub stack_ordering: StackOrdering,     // TODO: make it do something
-    pub font_size: f32,                    // TODO: make it do something
-    pub stack_preserved_across_runs: bool, // TODO: make it do something
+    pub autoplay_audio: bool,
+    pub stack_ordering: StackOrdering,
+    pub font_size: f32, // TODO: make it do something
+    pub stack_preserved_across_runs: bool,
+    pub runtime: uiua::Uiua, // TODO: add execution limit to the
+                             // runtime (.with_execution_limit)
 }
 #[derive(Debug, Clone, Default)]
 pub enum StackOrdering {
@@ -74,26 +89,33 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             clean_input_on_run: false,
-            execution_limit: Duration::from_secs(5),
-            audio_sample_time: 44100,
-            autoplay_video: false,
             autoplay_audio: false,
-            gayness: (),
-            stack_ordering: StackOrdering::default(),
-            font_size: 100.0,                  // TODO: implement
-            stack_preserved_across_runs: true, // TODO: implement
+            stack_ordering: StackOrdering::TopAtTop,
+            font_size: 100.0,
+            stack_preserved_across_runs: true,
+            runtime: uiua::Uiua::with_safe_sys(),
         }
     }
 }
 
-pub fn run_uiua(code: &str) -> Result<Vec<ScrollbackOutput>, String> {
-    let mut runtime = uiua::Uiua::with_safe_sys();
+pub fn run_uiua(
+    code: &str,
+    mut settings: Signal<Settings>,
+) -> Result<Vec<ScrollbackOutput>, String> {
+    let stack_preserved_across_runs = settings.read().stack_preserved_across_runs;
+    let runtime = &mut settings.write().runtime;
     match runtime.run_str(code) {
-        Ok(_compiler) => Ok(runtime
-            .take_stack()
-            .into_iter()
-            .map(|v| ScrollbackOutput::from_uiuavalue(v, ()))
-            .collect()),
+        Ok(_compiler) => {
+            let stack = if stack_preserved_across_runs {
+                runtime.stack().to_vec()
+            } else {
+                runtime.take_stack()
+            };
+            Ok(stack
+                .into_iter()
+                .map(|v| ScrollbackOutput::from_uiuavalue(v))
+                .collect())
+        }
         Err(e) => Err(e.to_string()),
     }
 }
@@ -104,10 +126,12 @@ pub fn handle_running_code(
     settings: Signal<Settings>,
 ) {
     use ScrollbackItem as SBI;
-    buffer_contents
-        .write()
-        .push(SBI::Input(highlight_code(&input_contents.read().clone())));
-    match run_uiua(&input_contents()) {
+    use ScrollbackItemInner as SBII;
+    buffer_contents.write().push(SBI {
+        inner: SBII::Input(highlight_code(&input_contents.read().clone())),
+        key: uiua::random(),
+    });
+    match run_uiua(&input_contents(), settings) {
         Ok(sbo) => {
             let s = sbo
                 .into_iter()
@@ -124,16 +148,19 @@ pub fn handle_running_code(
                 })
                 .collect();
 
-            buffer_contents.write().push(SBI::Output(s));
+            buffer_contents.write().push(SBI {
+                inner: SBII::Output(s),
+                key: uiua::random(),
+            });
             if settings.read().clean_input_on_run {
                 *input_contents.write() = String::new();
             }
         }
         Err(s) => {
-            buffer_contents
-                .write()
-                .push(SBI::Output(vec![ScrollbackOutput::Text(s)]));
-            *input_contents.write() = String::new();
+            buffer_contents.write().push(SBI {
+                inner: SBII::Output(vec![ScrollbackOutput::Text(s)]),
+                key: uiua::random(),
+            });
         }
     }
 }
