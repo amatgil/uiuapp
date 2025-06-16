@@ -225,8 +225,8 @@ button:hover {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: calc(100vw/3);
-    height: calc(100vw/3);
+    width: 33vw;
+    height: 33vw;
     border-radius: 50%;
     background-color: transparent;
     /* background-color: gray; */

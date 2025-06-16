@@ -19,6 +19,7 @@ fn main() {
 fn App() -> Element {
     static CSS: Asset = asset!("/assets/uiuapp.css");
     static _UIUA386: Asset = asset!("/assets/Uiua386.ttf");
+    static ICON: Asset = asset!("/assets/uiua-logo.png");
 
     // the text that's been input and evaluated
     // populated for testing
@@ -51,6 +52,7 @@ fn App() -> Element {
             content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover",
             name: "viewport",
         }
+        Link { rel: "apple-touch-icon", href: ICON}
         Title { "cas/uiuapp" }
         Stylesheet { href: CSS }
 

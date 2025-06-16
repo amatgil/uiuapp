@@ -9,20 +9,18 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
             div { class: "radial-selector",
                   for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
                       let angle = (i as f32) * 360. / (glyphs.len()-1) as f32;
-                      //TODO: make computed
-                      let radius = 60.;
                       match glyph {
                           E::Left(ref prims) => {
                               let primes = prims.clone();
                               rsx! {
                                   button { class: "uiua-char-input uiua-radial-char-input",
-                                           style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-{radius}px) rotate(-{angle}deg);",
+                                           style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-14vw) rotate(-{angle}deg);",
                                            onclick: move |evt| {
                                                evt.prevent_default();
                                                input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
                                            },
                                            for p in prims {
-                                               span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                               span { class: css_of_prim(p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                                            }
                                   }
                               }
@@ -34,7 +32,7 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
                                   button {
                                       onclick: move |e| {
                                           e.prevent_default();
-                                          if &s != &EXPERIMENTAL_ICON {
+                                          if s != EXPERIMENTAL_ICON {
                                               input_contents.write().push_str(s);
                                           }
                                       },
