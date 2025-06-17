@@ -228,24 +228,23 @@ button:hover {
     width: 33vw;
     height: 33vw;
     border-radius: 50%;
-    background-color: transparent;
-    /* background-color: gray; */
+    background: gray;
     pointer-events: none;
 }
 
-.radial-selector::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* background: conic-gradient(purple 0% 12.5%, green 12.5% 37.5%, blue 37.5% 62.5%, yellow 62.5% 87.5%, purple 87.5% 100%); */
-    background: conic-gradient(gray 0% 12.5%, white 12.5% 37.5%, gray 37.5% 62.5%, white 62.5% 87.5%, gray 87.5% 100%);
-    /* background: gray; */
-    border-radius: 50%;
-    z-index: 1;
-}
+/* .radial-selector::before { */
+/*     content: ''; */
+/*     position: absolute; */
+/*     top: 0; */
+/*     left: 0; */
+/*     right: 0; */
+/*     bottom: 0; */
+/*     /* background: conic-gradient(purple 0% 12.5%, green 12.5% 37.5%, blue 37.5% 62.5%, yellow 62.5% 87.5%, purple 87.5% 100%); */ */
+/*     background: conic-gradient(gray 0% 12.5%, white 12.5% 37.5%, gray 37.5% 62.5%, white 62.5% 87.5%, gray 87.5% 100%); */
+/*     /* background: gray; */ */
+/*     border-radius: 50%; */
+/*     z-index: 1; */
+/* } */
 
 /* .radial-selector::after { */
 /*     content: ''; */

@@ -35,7 +35,7 @@ pub const TAU: f32 = 2.0 * PI;
 pub const MAX_OUTPUT_CHARS: usize = 1000;
 pub const UNKNOWN_GLYPH: char = '¡';
 pub const EXPERIMENTAL_ICON: &str = "🧪";
-const DEADZONE_RADIUS: f64 = 30.;
+const DEADZONE_RADIUS: f32 = 30.;
 
 #[derive(Debug, Clone)]
 pub enum ScrollbackItem {

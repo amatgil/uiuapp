@@ -1,5 +1,5 @@
 use crate::*;
-use dioxus::prelude::*;
+use dioxus::{html::geometry::euclid::Angle, prelude::*};
 
 #[component]
 pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
@@ -7,20 +7,24 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
     rsx! {
         if rad_info.read().is_active {
             div { class: "radial-selector",
+                  style: rad_info().style,
+                  // style: "background: conic-gradient(gray 0% 10%,white 10% 20%,gray 20% 30%,white 30% 40%,gray 40% 50%,white 50% 60%,gray 60% 70%,white 70% 80%,gray 80% 90%,white 90% 100%);",
                   for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
+                        dbg!(rad_info().current_selection);
+                      let font = if i == rad_info().current_selection {40} else {20};
                       let angle = (i as f32) * 360. / (glyphs.len()-1) as f32;
                       match glyph {
                           E::Left(ref prims) => {
                               let primes = prims.clone();
                               rsx! {
                                   button { class: "uiua-char-input uiua-radial-char-input",
-                                           style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-14vw) rotate(-{angle}deg);",
+                                           style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-12vw) rotate(-{angle}deg);",
                                            onclick: move |evt| {
                                                evt.prevent_default();
                                                input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
                                            },
                                            for p in prims {
-                                               span { class: css_of_prim(p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                               span { class: css_of_prim(p), style: "font-size: {font}px", "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                                            }
                                   }
                               }
@@ -60,21 +64,28 @@ pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>)
                 E::Left(ref prims) => {
                     let primsP = prims.clone();
                     let btn = button.clone();
+                    let btn2 = button.clone();
                     rsx! {
                         button { class: "uiua-char-input",
                                  onpointerdown: move |evt| {
-                                     rad_info.write().start(evt.data.screen_coordinates(), btn.clone());
+                                     rad_info.write().start(evt.data.screen_coordinates().to_f32(), btn.clone());
                                  },
                                  onpointermove: move |evt| {
-                                     rad_info.write().update(evt.data.screen_coordinates());
+                                     rad_info.write().update(evt.data.screen_coordinates().to_f32());
                                  },
                                  onpointerup: move |evt| {
                                      evt.prevent_default();
+                                     let pr = if rad_info().is_active {
+                                        let current_index = rad_info().current_selection;
+                                        let Either::Left(ref current_prims) = btn2[current_index + 1] else {panic!()};
+                                        current_prims
+                                     } else {&primsP};
+
                                      rad_info.write().reset();
-                                     input_contents.write().push_str(&primsP.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                     input_contents.write().push_str(&pr.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
                                  },
                                 for p in prims {
-                                    span { class: css_of_prim(&p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                    span { class: css_of_prim(p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                                 }
                         }
                     }
@@ -102,8 +113,8 @@ pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>)
 pub struct RadialInfo {
     pub is_active: bool,
     pub current_selection: usize,
-    pub starting_position: Point2D<f64, ScreenSpace>,
-    pub current_position: Point2D<f64, ScreenSpace>,
+    pub starting_position: Point2D<f32, ScreenSpace>,
+    pub current_position: Point2D<f32, ScreenSpace>,
     pub glyphs: Vec<Either<Vec<P>, (&'static str, &'static str)>>,
     pub style: String,
 }
@@ -112,14 +123,14 @@ impl RadialInfo {
     pub fn new() -> Self {
         Self {
             // to do: delete this
-            style: "background: none".to_string(),
+            style: "background: gray;".to_string(),
             ..Default::default()
         }
     }
 
     pub fn start(
         &mut self,
-        coord: Point2D<f64, ScreenSpace>,
+        coord: Point2D<f32, ScreenSpace>,
         glyphs: Vec<Either<Vec<P>, (&'static str, &'static str)>>,
     ) {
         self.starting_position = coord;
@@ -127,17 +138,10 @@ impl RadialInfo {
         self.glyphs = glyphs;
     }
 
-    pub fn update(&mut self, coord: Point2D<f64, ScreenSpace>) {
+    pub fn update(&mut self, coord: Point2D<f32, ScreenSpace>) {
         self.current_position = coord;
-        // let frac = 360. / (self.glyphs.len() - 1) as f64;
-        // let angle = self
-        //     .starting_position
-        //     .to_vector()
-        //     .angle_to(self.current_position.to_vector())
-        //     .to_degrees();
-        // dbg!(frac);
-        // dbg!(angle);
-        // dbg!(angle % frac);
+        self.set_selection();
+        self.compute_radial();
         if !self.is_active && self.should_activate() {
             self.is_active = true;
         }
@@ -151,23 +155,33 @@ impl RadialInfo {
         self.starting_position = Point2D::default();
         self.current_position = Point2D::default();
     }
-    pub fn _compute_radial(&mut self) {
-        let len = self.glyphs.len();
-        let mut initial = String::from("background: conic-gradient(");
-        let incr = if len > 0 { 100. / len as f64 } else { 100. };
-        let mut count = 0.;
-        let mut gray = true;
-        while count < 100. {
-            let color = if gray { "gray" } else { "white" };
-            let radius = 60.;
-            let upper = count + incr;
-            initial.push_str(format!("{} {count}% {upper}%,", color).as_str());
-            count = upper;
-            gray = !gray;
+    fn compute_radial(&mut self) {
+        let num_glyphs = self.glyphs.len() - 1;
+        if num_glyphs > 0 {
+            let chunk_size = 100. / num_glyphs as f64;
+            let spot = chunk_size * self.current_selection as f64;
+            if self.current_selection == 0 {
+                let low_gray = 100. - (chunk_size / 2.);
+                let high_gray = chunk_size / 2.;
+                self.style = format!("background: conic-gradient(gray 0% {high_gray}%, darkgray {high_gray}% {low_gray}%, gray {low_gray}% 100%);",);
+            } else {
+                let low_gray = spot - (chunk_size / 2.);
+                let high_gray = spot + (chunk_size / 2.);
+                self.style = format!("background: conic-gradient(darkgray 0% {low_gray}%, gray {low_gray}% {high_gray}%, darkgray {high_gray}% 100%);",);
+            }
         }
-        initial.push_str(");");
-        dbg!(&initial);
-        self.style = initial;
+    }
+    fn set_selection(&mut self) {
+        let num_glyphs = self.glyphs.len() - 1;
+        if num_glyphs > 0 {
+            let chunk_size = 360 / num_glyphs;
+            let vec = self.current_position - self.starting_position;
+            let angle =
+                (vec.angle_from_x_axis().to_degrees() + 450. + (chunk_size / 2) as f32) % 360.;
+            dbg!(angle);
+            let section = angle as usize / chunk_size;
+            self.current_selection = section;
+        }
     }
 }
 
