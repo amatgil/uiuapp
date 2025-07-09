@@ -13,24 +13,22 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
                       let font = if i == rad_info().current_selection {40} else {20};
                       let angle = (i as f32) * 360. / (glyphs.len()-1) as f32;
                       match glyph {
-                          E::Left(ref prims) => {
-                              let primes = prims.clone();
+                          Icon::Single(prim) => {
                               rsx! {
                                   button { class: "uiua-char-input uiua-radial-char-input",
                                            style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-12vw) rotate(-{angle}deg);",
                                            onclick: move |evt| {
                                                evt.prevent_default();
-                                               input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                               // input_contents.write().push_str(&primes.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                               input_contents.write().push(prim.glyph().unwrap());
                                            },
-                                           for p in prims {
-                                               span { class: css_of_prim(p), style: "font-size: {font}px", "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                                           }
+                                        span { class: css_of_prim(&prim), style: "font-size: {font}px", "{prim.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                                   }
                               }
 
                           },
 
-                          E::Right((s, c)) => {
+                          Icon::Exper((s, c)) => {
                               rsx! {
                                   button {
                                       onclick: move |e| {
@@ -42,6 +40,21 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
                                       class: "{c}", "{s}"
                                   }
                               }
+                          },
+                            Icon::Idiom(prims) => {
+                              rsx! {
+                                  button { class: "uiua-char-input uiua-radial-char-input",
+                                           style: "position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate({angle}deg) translateY(-12vw) rotate(-{angle}deg);",
+                                           onclick: move |evt| {
+                                               evt.prevent_default();
+                                               input_contents.write().push_str(&prims.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                           },
+                                  for p in prims.clone() {
+                                        span { class: css_of_prim(&p), style: "font-size: {font}px", "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                    }
+                                  }
+                              }
+
                           }
                       }
                   }
@@ -59,8 +72,8 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
 pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
     rsx! {
         for button in button_icons.clone() {
-            match button[0] {
-                E::Left(ref prims) => {
+            match button.get(0).unwrap().clone() {
+                Icon::Single(ref prims) => {
                     let primsP = prims.clone();
                     let btn = button.clone();
                     let btn2 = button.clone();
@@ -76,21 +89,19 @@ pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>)
                                      evt.prevent_default();
                                      let pr = if rad_info().is_active {
                                         let current_index = rad_info().current_selection;
-                                        let Either::Left(ref current_prims) = btn2[current_index + 1] else {panic!()};
+                                        let Icon::Single(ref current_prims) = btn2[current_index + 1] else {panic!()};
                                         current_prims
                                      } else {&primsP};
 
                                      rad_info.write().reset();
-                                     input_contents.write().push_str(&pr.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                    input_contents.write().push(pr.glyph().unwrap());
                                  },
-                                for p in prims {
-                                    span { class: css_of_prim(p), "{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
-                                }
+                                span { class: css_of_prim(prims), "{prims.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
                         }
                     }
                 },
 
-                E::Right((s, c)) => {
+                Icon::Exper((s, c)) => {
                     rsx! {
                         button {
                             onclick: move |e| {
@@ -102,7 +113,21 @@ pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>)
                             class: "{c}", "{s}"
                         }
                     }
-                }
+                },
+                Icon::Idiom(prims) => {
+                              rsx! {
+                                  button { class: "uiua-char-input uiua-radial-char-input",
+                                           onclick: move |evt| {
+                                               evt.prevent_default();
+                                               input_contents.write().push_str(&prims.iter().map(|p|p.glyph().unwrap_or(UNKNOWN_GLYPH)).collect::<String>());
+                                           },
+                                  for p in prims.clone() {
+                                        span { class: css_of_prim(&p),"{p.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
+                                    }
+                                  }
+                              }
+
+                          }
             }
         }
     }
@@ -114,7 +139,7 @@ pub struct RadialInfo {
     pub current_selection: usize,
     pub starting_position: Point2D<f32, ScreenSpace>,
     pub current_position: Point2D<f32, ScreenSpace>,
-    pub glyphs: Vec<Either<Vec<P>, (&'static str, &'static str)>>,
+    pub glyphs: Vec<Icon>,
     pub style: String,
 }
 
@@ -127,11 +152,7 @@ impl RadialInfo {
         }
     }
 
-    pub fn start(
-        &mut self,
-        coord: Point2D<f32, ScreenSpace>,
-        glyphs: Vec<Either<Vec<P>, (&'static str, &'static str)>>,
-    ) {
+    pub fn start(&mut self, coord: Point2D<f32, ScreenSpace>, glyphs: Vec<Icon>) {
         self.starting_position = coord;
         self.current_position = coord;
         self.glyphs = glyphs;

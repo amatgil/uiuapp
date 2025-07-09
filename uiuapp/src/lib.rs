@@ -16,20 +16,17 @@ use uiua::{
     PrimClass, Primitive as P, SpanKind,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Either<L, R> {
-    Left(L),
-    Right(R),
-}
-use Either as E;
-
 /// An icon is either
-/// - (A vector of) Primitives
+/// - A Primitive
+/// - An Idiom of multiple Primitives
 /// - A string (and its associated html class)
 /// (Primitives do not store their class themselves, its computed based on their signature)
-///
-/// Primitives are stored as a vector to support multi-primitive icons, like `wrench` (subbyneg)
-pub type ButtonIcon = Either<Vec<P>, (&'static str, &'static str)>;
+#[derive(Debug, Clone, PartialEq)]
+pub enum Icon {
+    Single(P),
+    Idiom(Vec<P>),
+    Exper((&'static str, &'static str)),
+}
 
 pub const TAU: f32 = 2.0 * PI;
 pub const MAX_OUTPUT_CHARS: usize = 1000;
@@ -139,123 +136,123 @@ pub fn handle_running_code(
 }
 
 // Tiny convenience for single-character glyphs in button_icons
-fn l(p: P) -> Either<Vec<P>, (&'static str, &'static str)> {
-    E::Left(vec![p])
+fn s(p: P) -> Icon {
+    Icon::Single(p)
 }
 
 lazy_static! {
     /// The car of each line is the default icon. when pressed, the cdr is the radial menu icons
     /// See [ButtonIcon]'s documentation for an explanation of the type
-    pub static ref button_icons: [Vec<ButtonIcon>; 4 * 5] = [
+    pub static ref button_icons: [Vec<Icon>; 4 * 5] = [
         // ====== ROW ONE ======
         // Id
         vec![
-            l(P::Identity), l(P::Slf), l(P::Backward), l(P::Pop),
-            l(P::Dup), l(P::Flip), l(P::Stack),
+            s(P::Identity), s(P::Slf), s(P::Backward), s(P::Pop),
+            s(P::Dup), s(P::Flip), s(P::Stack),
         ],
         // Stack
         vec![
-            l(P::Fork), l(P::Both), l(P::Bracket),
-            l(P::Dip), l(P::Gap),
-            l(P::On), l(P::By),
-            l(P::Off), l(P::With),
-            l(P::Below),
+            s(P::Fork), s(P::Both), s(P::Bracket),
+            s(P::Dip), s(P::Gap),
+            s(P::On), s(P::By),
+            s(P::Off), s(P::With),
+            s(P::Below),
         ],
         // Inv
-        vec![l(P::Un), l(P::Anti), l(P::Under), l(P::Obverse), l(P::Fill)], // TODO: find a home for fill
+        vec![s(P::Un), s(P::Anti), s(P::Under), s(P::Obverse), s(P::Fill)], // TODO: find a home for fill
         // Iter
         vec![
-            l(P::Reduce), l(P::Fold), l(P::Scan), l(P::Repeat),
-            l(P::Switch), l(P::Do), l(P::Try), l(P::Case), l(P::Assert),
+            s(P::Reduce), s(P::Fold), s(P::Scan), s(P::Repeat),
+            s(P::Switch), s(P::Do), s(P::Try), s(P::Case), s(P::Assert),
         ],
         // Sub
         vec![
-            l(P::Rows), l(P::Table), l(P::Stencil), l(P::Tuples),
-            l(P::Partition), l(P::Group)
+            s(P::Rows), s(P::Table), s(P::Stencil), s(P::Tuples),
+            s(P::Partition), s(P::Group)
         ],
 
         // ====== ROW TWO ======
 
         // MAr
         vec![
-            l(P::Neg), l(P::Sign), l(P::Not), l(P::Abs), l(P::Sqrt),
-            l(P::Sin), l(P::Floor), l(P::Ceil), l(P::Round),
+            s(P::Neg), s(P::Sign), s(P::Not), s(P::Abs), s(P::Sqrt),
+            s(P::Sin), s(P::Floor), s(P::Ceil), s(P::Round),
         ],
         // MSt
         vec![
-            l(P::Len), l(P::Shape), l(P::First), l(P::Last),
-            l(P::Reverse), l(P::Deshape), l(P::Fix), l(P::Transpose),
+            s(P::Len), s(P::Shape), s(P::First), s(P::Last),
+            s(P::Reverse), s(P::Deshape), s(P::Fix), s(P::Transpose),
         ],
         // MVl
-        vec![l(P::Range), l(P::Bits), l(P::Where), l(P::Parse)],
+        vec![s(P::Range), s(P::Bits), s(P::Where), s(P::Parse)],
         // MCmp
         vec![
-            l(P::Sort), l(P::Rise), l(P::Fall), l(P::Classify),
-            l(P::Deduplicate), l(P::Unique),
+            s(P::Sort), s(P::Rise), s(P::Fall), s(P::Classify),
+            s(P::Deduplicate), s(P::Unique),
         ],
         // Box
-        vec![l(P::Box), l(P::Content), l(P::Inventory)],
+        vec![s(P::Box), s(P::Content), s(P::Inventory)],
 
         // ===== ROW THREE =====
 
         // DAr
         vec![
-            l(P::Add), l(P::Sub), l(P::Mul), l(P::Div),
-            l(P::Modulus), l(P::Pow), l(P::Log), l(P::Atan),
-            l(P::Complex), l(P::Base),
+            s(P::Add), s(P::Sub), s(P::Mul), s(P::Div),
+            s(P::Modulus), s(P::Pow), s(P::Log), s(P::Atan),
+            s(P::Complex), s(P::Base),
         ],
 
         // DSt
         vec![
-            l(P::Couple), l(P::Join), l(P::Select), l(P::Pick),
-            l(P::Reshape), l(P::Drop), l(P::Take), l(P::Rotate),
-            l(P::Keep), l(P::Orient),
+            s(P::Couple), s(P::Join), s(P::Select), s(P::Pick),
+            s(P::Reshape), s(P::Drop), s(P::Take), s(P::Rotate),
+            s(P::Keep), s(P::Orient),
         ],
 
         // Comp
         vec![
-            l(P::Eq), l(P::Ne), l(P::Le), l(P::Lt),
-            l(P::Gt), l(P::Ge), l(P::Min), l(P::Max),
+            s(P::Eq), s(P::Ne), s(P::Le), s(P::Lt),
+            s(P::Gt), s(P::Ge), s(P::Min), s(P::Max),
         ],
         // DCmp
         vec![
-            l(P::Match), l(P::Find), l(P::Mask), l(P::MemberOf),
-            l(P::IndexOf), l(P::Partition), l(P::Group),
+            s(P::Match), s(P::Find), s(P::Mask), s(P::MemberOf),
+            s(P::IndexOf), s(P::Partition), s(P::Group),
         ],
 
         // Const
-        vec![l(P::Rand), l(P::Eta), l(P::Pi), l(P::Tau), l(P::Infinity)],
+        vec![s(P::Rand), s(P::Eta), s(P::Pi), s(P::Tau), s(P::Infinity)],
 
         // ===== ROW FOUR ====
 
         // TBD
-        vec![E::Right(("Empty", ""))], // TODO: Figure out what to put here (baby fat for now)
+        vec![Icon::Exper(("Empty", ""))], // TODO: Figure out what to put here (baby fat for now)
         // Digits
-        vec![E::Right(("0", "constant-value")), // TODO: These should bring up a keypad (see issue #9)
-             E::Right(("1", "constant-value")),
-             E::Right(("2", "constant-value")),
-             E::Right(("3", "constant-value")),
-             E::Right(("4", "constant-value")),
-             E::Right(("5", "constant-value")),
-             E::Right(("6", "constant-value")),
-             E::Right(("7", "constant-value")),
-             E::Right(("8", "constant-value")),
-             E::Right(("9", "constant-value"))],
+        vec![Icon::Exper(("0", "constant-value")), // TODO: These should bring up a keypad (see issue #9)
+             Icon::Exper(("1", "constant-value")),
+             Icon::Exper(("2", "constant-value")),
+             Icon::Exper(("3", "constant-value")),
+             Icon::Exper(("4", "constant-value")),
+             Icon::Exper(("5", "constant-value")),
+             Icon::Exper(("6", "constant-value")),
+             Icon::Exper(("7", "constant-value")),
+             Icon::Exper(("8", "constant-value")),
+             Icon::Exper(("9", "constant-value"))],
         // Subs
-        vec![E::Right(("₀", "constant-value")),
-             E::Right(("₁", "constant-value")),
-             E::Right(("₂", "constant-value")),
-             E::Right(("₃", "constant-value")),
-             E::Right(("₄", "constant-value")),
-             E::Right(("₅", "constant-value")),
-             E::Right(("₆", "constant-value")),
-             E::Right(("₇", "constant-value")),
-             E::Right(("₈", "constant-value")),
-             E::Right(("₉", "constant-value"))],
+        vec![Icon::Exper(("₀", "constant-value")),
+             Icon::Exper(("₁", "constant-value")),
+             Icon::Exper(("₂", "constant-value")),
+             Icon::Exper(("₃", "constant-value")),
+             Icon::Exper(("₄", "constant-value")),
+             Icon::Exper(("₅", "constant-value")),
+             Icon::Exper(("₆", "constant-value")),
+             Icon::Exper(("₇", "constant-value")),
+             Icon::Exper(("₈", "constant-value")),
+             Icon::Exper(("₉", "constant-value"))],
         // Exp
-        vec![E::Right((EXPERIMENTAL_ICON, ""))], // TODO: Should/Must be autopopulated
+        vec![Icon::Exper((EXPERIMENTAL_ICON, ""))], // TODO: Should/Must be autopopulated
         // Idioms
-        vec![E::Left(vec![P::Sub, P::By, P::Not])],
+        vec![Icon::Idiom(vec![P::Sub, P::By, P::Not])],
     ];
 }
 
@@ -263,7 +260,7 @@ lazy_static! {
 fn keypad_has_all_prims() {
     fn prim_exists_in_keypad(p: P) -> bool {
         for grouping in button_icons.clone() {
-            if grouping.contains(&l(p)) {
+            if grouping.contains(&s(p)) {
                 return true;
             }
         }
