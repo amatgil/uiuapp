@@ -8,7 +8,6 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
         if rad_info.read().is_active {
             div { class: "radial-selector",
                   style: rad_info().style,
-                  // style: "background: conic-gradient(gray 0% 10%,white 10% 20%,gray 20% 30%,white 30% 40%,gray 40% 50%,white 50% 60%,gray 60% 70%,white 70% 80%,gray 80% 90%,white 90% 100%);",
                   for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
                         dbg!(rad_info().current_selection);
                       let font = if i == rad_info().current_selection {40} else {20};
