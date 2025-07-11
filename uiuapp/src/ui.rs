@@ -1,5 +1,10 @@
+use std::time::Instant;
+
 use crate::*;
-use dioxus::{html::geometry::euclid::Angle, prelude::*};
+use dioxus::prelude::*;
+use dioxus_logger::tracing::info;
+
+const RADIAL_DELAY: Duration = Duration::from_secs(1);
 
 #[component]
 pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
@@ -70,26 +75,39 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
 
 #[component]
 pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
+    // Add global pointer event listeners for iOS compatibility
+    use_effect(move || {
+        // This effect will run once when the component mounts
+        // We'll add global event listeners here if needed
+        info!("ButtonIcons component mounted");
+    });
+
     rsx! {
         for button in button_icons.clone() {
             match button.get(0).unwrap().clone() {
                 Icon::Single(ref prims) => {
                     let primsP = prims.clone();
-                    let btn = button.clone();
-                    let btn2 = button.clone();
+                    let btn_down = button.clone();
+                    let btn_up = button.clone();
                     rsx! {
                         button { class: "uiua-char-input",
+                                 style: "touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;",
                                  onpointerdown: move |evt| {
-                                     rad_info.write().start(evt.data.screen_coordinates().to_f32(), btn.clone());
+                                     evt.prevent_default();
+                                     info!("Pointer down fired");
+                                     rad_info.write().start(evt.data.screen_coordinates().to_f32(), btn_down.clone());
                                  },
                                  onpointermove: move |evt| {
+                                     evt.prevent_default();
+                                     info!("Pointer move fired");
                                      rad_info.write().update(evt.data.screen_coordinates().to_f32());
                                  },
                                  onpointerup: move |evt| {
                                      evt.prevent_default();
+                                     info!("Pointer up fired");
                                      let pr = if rad_info().is_active {
                                         let current_index = rad_info().current_selection;
-                                        let Icon::Single(ref current_prims) = btn2[current_index + 1] else {panic!()};
+                                        let Icon::Single(ref current_prims) = btn_up[current_index + 1] else {panic!()};
                                         current_prims
                                      } else {&primsP};
 
@@ -141,6 +159,7 @@ pub struct RadialInfo {
     pub current_position: Point2D<f32, ScreenSpace>,
     pub glyphs: Vec<Icon>,
     pub style: String,
+    pub timer: Option<Instant>,
 }
 
 impl RadialInfo {
@@ -156,6 +175,7 @@ impl RadialInfo {
         self.starting_position = coord;
         self.current_position = coord;
         self.glyphs = glyphs;
+        self.timer = Some(Instant::now());
     }
 
     pub fn update(&mut self, coord: Point2D<f32, ScreenSpace>) {
@@ -167,13 +187,19 @@ impl RadialInfo {
         }
     }
     pub fn should_activate(&self) -> bool {
-        self.starting_position.distance_to(self.current_position) > DEADZONE_RADIUS
+        if let Some(t) = self.timer
+            && t.elapsed() > RADIAL_DELAY
+        {
+            return true;
+        }
+        false
     }
     pub fn reset(&mut self) {
         self.is_active = false;
         self.glyphs.clear();
         self.starting_position = Point2D::default();
         self.current_position = Point2D::default();
+        self.timer = None;
     }
     fn compute_radial(&mut self) {
         let num_glyphs = self.glyphs.len() - 1;

@@ -155,6 +155,16 @@ button:hover {
     aspect-ratio: 1 / 1;
     font-size: 1.4rem;
     font-weight: bold;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .uiua-radial-char-input {
