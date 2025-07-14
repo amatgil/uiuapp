@@ -44,3 +44,6 @@ script = []
 
 [application.ios]
 webview_is_inspectable = true
+
+# [bundle]
+# icon = ["assets/uiua-logo.png"]

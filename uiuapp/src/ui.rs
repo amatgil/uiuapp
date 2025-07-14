@@ -1,16 +1,18 @@
-use std::time::Instant;
+use std::time;
 
 use crate::*;
 use dioxus::prelude::*;
 use dioxus_logger::tracing::info;
+use tokio::time::sleep;
+// use tokio::{task::JoinHandle, time::sleep};
 
-const RADIAL_DELAY: Duration = Duration::from_secs(1);
+const RADIAL_DELAY: Duration = Duration::from_millis(500);
 
 #[component]
 pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
     let glyphs = rad_info().glyphs;
     rsx! {
-        if rad_info.read().is_active {
+        if rad_info.read().active {
             div { class: "radial-selector",
                   style: rad_info().style,
                   for (i, glyph) in glyphs.clone().into_iter().skip(1).enumerate() { {
@@ -75,13 +77,13 @@ pub fn RadialSelector(input_contents: Signal<String>, rad_info: Signal<RadialInf
 
 #[component]
 pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>) -> Element {
-    // Add global pointer event listeners for iOS compatibility
-    use_effect(move || {
-        // This effect will run once when the component mounts
-        // We'll add global event listeners here if needed
-        info!("ButtonIcons component mounted");
-    });
-
+    let mut timer = use_signal::<Option<Task>>(|| None);
+    let mut cancel_timer = move || {
+        if let Some(task) = timer.take() {
+            task.cancel();
+        }
+    };
+    let thing = spawn(async move {});
     rsx! {
         for button in button_icons.clone() {
             match button.get(0).unwrap().clone() {
@@ -90,12 +92,21 @@ pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>)
                     let btn_down = button.clone();
                     let btn_up = button.clone();
                     rsx! {
-                        button { class: "uiua-char-input",
+                        button { tabindex: 0,
+                                class: "uiua-char-input",
                                  style: "touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;",
                                  onpointerdown: move |evt| {
-                                     evt.prevent_default();
-                                     info!("Pointer down fired");
-                                     rad_info.write().start(evt.data.screen_coordinates().to_f32(), btn_down.clone());
+                                    evt.prevent_default();
+                                    cancel_timer();
+                                    info!("Pointer down fired");
+                                    let coords = evt.data.screen_coordinates().to_f32();
+                                    let task = spawn(async move {
+                                        sleep(RADIAL_DELAY).await;
+                                        rad_info.write().update(coords);
+                                        rad_info.write().active = true;
+                                    });
+                                    timer.set(Some(task));
+                                    rad_info.write().start(coords, btn_down.clone());
                                  },
                                  onpointermove: move |evt| {
                                      evt.prevent_default();
@@ -103,15 +114,16 @@ pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>)
                                      rad_info.write().update(evt.data.screen_coordinates().to_f32());
                                  },
                                  onpointerup: move |evt| {
-                                     evt.prevent_default();
-                                     info!("Pointer up fired");
-                                     let pr = if rad_info().is_active {
+                                    evt.prevent_default();
+                                    cancel_timer();
+                                    info!("Pointer up fired");
+                                    let pr = if rad_info().active {
                                         let current_index = rad_info().current_selection;
                                         let Icon::Single(ref current_prims) = btn_up[current_index + 1] else {panic!()};
                                         current_prims
-                                     } else {&primsP};
+                                    } else {&primsP};
 
-                                     rad_info.write().reset();
+                                    rad_info.write().reset();
                                     input_contents.write().push(pr.glyph().unwrap());
                                  },
                                 span { class: css_of_prim(prims), "{prims.glyph().unwrap_or(UNKNOWN_GLYPH)}" }
@@ -153,13 +165,13 @@ pub fn ButtonIcons(input_contents: Signal<String>, rad_info: Signal<RadialInfo>)
 
 #[derive(Debug, Clone, Default)]
 pub struct RadialInfo {
-    pub is_active: bool,
+    pub active: bool,
     pub current_selection: usize,
     pub starting_position: Point2D<f32, ScreenSpace>,
     pub current_position: Point2D<f32, ScreenSpace>,
     pub glyphs: Vec<Icon>,
     pub style: String,
-    pub timer: Option<Instant>,
+    // pub timer: Option
 }
 
 impl RadialInfo {
@@ -175,31 +187,19 @@ impl RadialInfo {
         self.starting_position = coord;
         self.current_position = coord;
         self.glyphs = glyphs;
-        self.timer = Some(Instant::now());
     }
 
     pub fn update(&mut self, coord: Point2D<f32, ScreenSpace>) {
         self.current_position = coord;
         self.set_selection();
         self.compute_radial();
-        if !self.is_active && self.should_activate() {
-            self.is_active = true;
-        }
     }
-    pub fn should_activate(&self) -> bool {
-        if let Some(t) = self.timer
-            && t.elapsed() > RADIAL_DELAY
-        {
-            return true;
-        }
-        false
-    }
+
     pub fn reset(&mut self) {
-        self.is_active = false;
+        self.active = false;
         self.glyphs.clear();
         self.starting_position = Point2D::default();
         self.current_position = Point2D::default();
-        self.timer = None;
     }
     fn compute_radial(&mut self) {
         let num_glyphs = self.glyphs.len() - 1;
@@ -209,11 +209,15 @@ impl RadialInfo {
             if self.current_selection == 0 {
                 let low_gray = 100. - (chunk_size / 2.);
                 let high_gray = chunk_size / 2.;
-                self.style = format!("background: conic-gradient(gray 0% {high_gray}%, darkgray {high_gray}% {low_gray}%, gray {low_gray}% 100%);",);
+                self.style = format!(
+                    "background: conic-gradient(gray 0% {high_gray}%, darkgray {high_gray}% {low_gray}%, gray {low_gray}% 100%);",
+                );
             } else {
                 let low_gray = spot - (chunk_size / 2.);
                 let high_gray = spot + (chunk_size / 2.);
-                self.style = format!("background: conic-gradient(darkgray 0% {low_gray}%, gray {low_gray}% {high_gray}%, darkgray {high_gray}% 100%);",);
+                self.style = format!(
+                    "background: conic-gradient(darkgray 0% {low_gray}%, gray {low_gray}% {high_gray}%, darkgray {high_gray}% 100%);",
+                );
             }
         }
     }

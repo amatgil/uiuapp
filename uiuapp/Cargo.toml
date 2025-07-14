@@ -2,7 +2,7 @@
 name = "uiuapp"
 version = "0.1.0"
 authors = ["amatgil <amatgilvinyes@gmail.com>"]
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -11,9 +11,14 @@ edition = "2021"
 dioxus = { version = "0.6", features = ["web"] }
 
 # Debug
-dioxus-logger = "0.5.1"
-uiua = { version = "0.16.0", default-features = false, features = ["batteries", "web"] }
-getrandom = { version = "0.2", features = ["js"] } # uiua complains otherwise
+dioxus-logger = "0.6"
+uiua = { version = "0.16", default-features = false, features = [
+  "batteries",
+  "web",
+] }
+getrandom = { version = "0.3", features = [
+  "wasm_js",
+] } # uiua complains otherwise
 web-sys = { version = "0.3.77", features = [
   "CssStyleDeclaration",
   "DomRect",
@@ -40,11 +45,12 @@ web-sys = { version = "0.3.77", features = [
   "ResizeObserver",
   "ResizeObserverEntry",
   "Performance",
-]}
+] }
 lazy_static = "1.5.0"
 image = "0.25.6"
 base64 = "0.22.1"
-
+tokio = { version = "1", features = ["time"] }
+gloo-events = "0.2.0"
 
 
 [profile]
