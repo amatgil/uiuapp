@@ -1,7 +1,7 @@
 {
   description = "Cross-platform app for uiua";
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
     rust-overlay.url = "github:oxalica/rust-overlay";
   };
   outputs =

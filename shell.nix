@@ -25,6 +25,37 @@ let
     gtk3
     #webkit2gtk-sys
     libsoup
+    nss
+    nspr
+    xorg.libxkbfile
+    xorg.libXcursor
+    libsForQt5.qt5ct
+    qt5Full
+    xorg.libxcb
+    xorg.xcbutil
+    xorg.xcbutilimage
+    xorg.xcbutilkeysyms
+    xorg.xcbutilwm
+    xorg.xcbutilrenderutil
+    libxkbcommon
+    xorg.libX11
+    xorg.libXext
+    xorg.libXcursor
+    xorg.libXinerama
+
+    xcb-util-cursor
+    xcb-proto
+    openssl
+    pkg-config
+    cargo-ndk
+
+#androidComposition = pkgs.androidenv.composeAndroidPackages {
+#  includeNDK = true;
+#  includeSDK = true;
+#  platformToolsVersion = "34.0.5";
+#  ndkVersion = "26.1.10909125";
+#};
+
 
 
     (rustPlatformD.buildRustPackage rec {
@@ -36,7 +67,7 @@ let
         hash =  "sha256-wuIJq+UN1q5qYW4TXivq93C9kZiPHwBW5Ty2Vpik2oY=";
       };
 
-      cargoHash = "sha256-LnNLsU8bbbVIUltBbhLYkRTcFMPwkrLjHf19U44BHy4=";
+      cargoHash = "sha256-L9r/nJj0Rz41mg952dOgKxbDS5u4zGEjSA3EhUHfGIk=";
 
       nativeBuildInputs = [
         pkg-config
@@ -60,7 +91,7 @@ let
     (rustPlatform.buildRustPackage rec {
       pname = "wasm-bindgen-cli";
       version = "0.2.100";
-      cargoHash = "sha256-tD0OY2PounRqsRiFh8Js5nyknQ809ZcHMvCOLrvYHRE=";
+      cargoHash = "sha256-qsO12332HSjWCVKtf1cUePWWb9IdYUmT+8OPj/XP2WE=";
 
       src = fetchCrate {
         inherit pname version;
