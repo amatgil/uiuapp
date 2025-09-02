@@ -14,7 +14,7 @@ let
     mold
     #rust-bin.stable.latest.default
     (rust-bin.stable.latest.default.override {
-      targets = [ "wasm32-unknown-unknown" ];
+      targets = [ "wasm32-unknown-unknown" "aarch64-linux-android" "armv7-linux-androideabi" "i686-linux-android" "x86_64-linux-android" ];
     })
 
     # For linux native
@@ -23,7 +23,7 @@ let
     gdk-pixbuf
     cairo
     gtk3
-    webkit2gtk-sys
+    #webkit2gtk-sys
     libsoup
 
 
@@ -70,6 +70,10 @@ let
       buildInputs = [ openssl ];
       nativeBuildInputs = [ pkg-config ];
     })
+
+    android-studio
+    #androidenv.androidPkgs_9_0.androidsdk
+    #(android-studio.withSdk (androidenv.composeAndroidPackages { includeNDK = true; }).androidsdk)
   ];
 in
 pkgs.mkShell {

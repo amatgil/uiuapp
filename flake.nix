@@ -10,7 +10,19 @@
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       overlays = [(import rust-overlay) ];
-      pkgs = (import nixpkgs { system = "x86_64-linux"; inherit overlays; });
+      pkgs = (import nixpkgs {
+        system = "x86_64-linux";
+        inherit overlays; 
+        config = {
+          android_sdk.accept_license = true;
+          allowUnfree = true;
+        };
+        #config = {
+        #android_sdk.accept_license = true;
+        #allowUnfree = true;
+        #};
+      }
+      );
     in
     {
       #packages = forAllSystems (system: {
